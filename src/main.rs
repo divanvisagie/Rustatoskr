@@ -1,9 +1,13 @@
+#![allow(deprecated)]
 use layers::{memory::StoredMessage, selector};
 use redis::{Client, Connection};
 use tokio::sync::Mutex;
 
 use std::{env, sync::Arc};
-use teloxide::{prelude::*, types::ChatAction};
+use teloxide::{
+    prelude::*,
+    types::{ChatAction, ParseMode},
+};
 
 mod capabilities;
 mod clients;
@@ -89,7 +93,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let bot = Bot::from_env();
     let wc = Arc::new(Mutex::new(get_redis_connection()));
-
     teloxide::repl(bot, move |bot: Bot, msg: Message| {
         let conn = Arc::clone(&wc);
 
@@ -103,7 +106,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             let mut req = bc.bot_type_to_request_message(&msg);
             let res = hdlr.handle_message(&mut req).await;
 
-            bot.send_message(msg.chat.id, res.text).await?;
+            bot.send_message(msg.chat.id, res.text)
+                .parse_mode(ParseMode::Markdown)
+                .await?;
 
             Ok(())
         }
