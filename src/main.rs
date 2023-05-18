@@ -1,22 +1,17 @@
 use capabilities::{chat::chat::ChatCapability, Capability};
-use futures::future::BoxFuture;
-use serde::de::Error;
-use std::future::Future;
-use std::{env, future};
+
+use std::env;
 use teloxide::{prelude::*, types::ChatAction};
-use teloxide::{prelude::*, utils::command::BotCommands};
 
 mod capabilities;
 mod clients;
 
-use clients::chatgpt::{GptClient, Role};
-
-struct RequestMessage {
+pub struct RequestMessage {
     text: String,
 }
 
-#[derive(Clone)]
-struct ResponseMessage {
+#[derive(Clone, Debug)]
+pub struct ResponseMessage {
     text: String,
 }
 
@@ -41,43 +36,28 @@ impl TelegramConverter {
 }
 
 struct Handler {
-    client: GptClient,
-    capabilities: Vec<Box<dyn Capability>>, //Needs to be trait Send as well
+    capabilities: Vec<Box<dyn Capability>>, // Needs to be trait Send as well
 }
 
 impl Handler {
     pub fn new() -> Self {
         Handler {
-            client: GptClient::new(),
             capabilities: vec![Box::new(ChatCapability::new())],
         }
     }
 
     async fn handle_message(mut self, message: RequestMessage) -> ResponseMessage {
-        self.client.add_message(Role::User, message.text.clone());
-        let response = self.client.complete().await;
-        self.client.add_message(Role::Assistant, response.clone());
+        let best = self.capabilities.iter_mut().reduce(|a, b| {
+            if a.check(&message) > b.check(&message) {
+                a
+            } else {
+                b
+            }
+        });
 
-        let msg = format!("{}", response);
-        let rm = ResponseMessage {
-            text: msg.to_string(),
-        };
-        rm.clone()
+        let response = best.unwrap().execute(&message);
+        response.await
     }
-}
-
-#[derive(BotCommands, Clone)]
-#[command(
-    rename_rule = "lowercase",
-    description = "These commands are supported:"
-)]
-enum Command {
-    #[command(description = "display this text.")]
-    Help,
-    #[command(description = "handle a username.")]
-    Username(String),
-    #[command(description = "handle a username and an age.", parse_with = "split")]
-    UsernameAndAge { username: String, age: u8 },
 }
 
 #[tokio::main]
