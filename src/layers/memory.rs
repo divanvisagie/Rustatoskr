@@ -18,11 +18,10 @@ pub struct StoredMessage {
 }
 
 pub struct MemoryLayer {
-    stored_messages: Vec<StoredMessage>,
     next: Box<dyn Layer>,
 }
 
-fn save_to_redis(message: StoredMessage) {
+fn save_to_redis(m_to_save: StoredMessage) {
     let url = env::var("REDIS_URL").expect("Missing REDIS_URL environment variable");
     let client = Client::open(url).expect("Failed to connect to Redis");
 
@@ -30,20 +29,56 @@ fn save_to_redis(message: StoredMessage) {
         .get_connection()
         .expect("Failed to get Redis connection");
 
-    let to_save = vec![&message];
-    let json_message =
-        serde_json::to_string(&to_save).expect("Failed to serialize message to JSON");
+    // create a reference key
+    let key = format!("messages:{}", m_to_save.username);
 
-    let key = format!("messages:{}", message.username);
+    log::info!("Saving message to Redis: {:?}", m_to_save);
+
+    let value_for_key: String = connection.get(&key).unwrap_or("[]".to_string());
+    log::info!("Value for key: {}", value_for_key);
+
+    let mut current_messages: Vec<StoredMessage> =
+        serde_json::from_str(&value_for_key).expect("Failed to deserialize messages from JSON");
+
+    current_messages.push(m_to_save);
+
+    if current_messages.len() > 15 {
+        // keep only the last 15 messages
+        current_messages.remove(0);
+    }
+
+    let json_message =
+        serde_json::to_string(&current_messages).expect("Failed to serialize message to JSON");
+
     let _: () = connection
         .set(key, json_message)
         .expect("Failed to save message to Redis");
 }
 
+fn get_from_redis(username: String) -> Vec<StoredMessage> {
+    let url = env::var("REDIS_URL").expect("Missing REDIS_URL environment variable");
+    let client = Client::open(url).expect("Failed to connect to Redis");
+
+    let mut connection = client
+        .get_connection()
+        .expect("Failed to get Redis connection");
+
+    // create a reference key
+    let key = format!("messages:{}", username);
+
+    let value_for_key: String = connection.get(&key).unwrap_or("[]".to_string());
+    log::info!("Value for key: {}", value_for_key);
+
+    let current_messages: Vec<StoredMessage> =
+        serde_json::from_str(&value_for_key).expect("Failed to deserialize messages from JSON");
+
+    current_messages
+}
+
 #[async_trait]
 impl Layer for MemoryLayer {
     async fn execute(&mut self, message: &mut RequestMessage) -> ResponseMessage {
-        message.context = self.stored_messages.clone();
+        message.context = get_from_redis(message.username.clone());
         let res = self.next.execute(message).await;
 
         let user_message = StoredMessage {
@@ -51,15 +86,15 @@ impl Layer for MemoryLayer {
             text: message.text.clone(),
             role: Role::User,
         };
-        self.stored_messages.push(user_message.clone());
         save_to_redis(user_message);
 
         let bot_message = StoredMessage {
-            username: "bot".to_string(),
+            username: message.username.clone(),
             text: res.text.clone(),
             role: Role::Assistant,
         };
-        self.stored_messages.push(bot_message);
+        log::info!("Saving bot message to Redis: {:?}", bot_message);
+        save_to_redis(bot_message);
 
         res
     }
@@ -67,9 +102,6 @@ impl Layer for MemoryLayer {
 
 impl MemoryLayer {
     pub fn new(next: Box<dyn Layer>) -> Self {
-        MemoryLayer {
-            stored_messages: Vec::new(),
-            next,
-        }
+        MemoryLayer { next }
     }
 }
