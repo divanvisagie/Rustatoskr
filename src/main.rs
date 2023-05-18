@@ -59,11 +59,9 @@ fn get_redis_connection() -> redis::Connection {
     let url = env::var("REDIS_URL").expect("Missing REDIS_URL environment variable");
     let client = Client::open(url).expect("Failed to connect to Redis");
 
-    let connection = client
+    client
         .get_connection()
-        .expect("Failed to get Redis connection");
-
-    connection
+        .expect("Failed to get Redis connection")
 }
 
 struct Handler {
@@ -81,8 +79,7 @@ impl Handler {
     }
 
     async fn handle_message(mut self, message: &mut RequestMessage) -> ResponseMessage {
-        let response = self.gateway_layer.execute(message).await;
-        response
+        self.gateway_layer.execute(message).await
     }
 }
 

@@ -13,7 +13,7 @@ pub struct ChatCapability {
 #[async_trait]
 impl Capability for ChatCapability {
     fn check(&mut self, message: &RequestMessage) -> f32 {
-        if message.text.len() > 0 {
+        if !message.text.is_empty() {
             return 1.0;
         }
         0.5
@@ -27,10 +27,7 @@ impl Capability for ChatCapability {
         self.client.add_message(Role::User, message.text.clone());
         let response = self.client.complete().await;
 
-        let msg = format!("{}", response);
-        ResponseMessage {
-            text: msg.to_string(),
-        }
+        ResponseMessage { text: response }
     }
 }
 

@@ -1,8 +1,7 @@
-use async_trait::async_trait;
-
 use super::Layer;
 use crate::capabilities::chat::chat::ChatCapability;
 use crate::{capabilities::Capability, RequestMessage, ResponseMessage};
+use async_trait::async_trait;
 pub struct SelectorLayer {
     // fields omitted
     capabilities: Vec<Box<dyn Capability>>,
@@ -12,13 +11,13 @@ pub struct SelectorLayer {
 impl Layer for SelectorLayer {
     async fn execute(&mut self, message: &mut RequestMessage) -> ResponseMessage {
         let best = self.capabilities.iter_mut().reduce(|a, b| {
-            if a.check(&message) > b.check(&message) {
+            if a.check(message) > b.check(message) {
                 a
             } else {
                 b
             }
         });
-        best.unwrap().execute(&message).await
+        best.unwrap().execute(message).await
     }
 }
 
