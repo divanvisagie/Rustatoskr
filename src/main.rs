@@ -1,3 +1,4 @@
+use chatgpt::Role;
 use teloxide::{prelude::*, types::ChatAction};
 
 mod chatgpt;
@@ -30,15 +31,23 @@ impl TelegramConverter {
     }
 }
 
-struct Handler;
+struct Handler {
+    client: chatgpt::GptClient,
+}
 
 impl Handler {
     pub fn new() -> Self {
-        Handler {}
+        Handler {
+            client: chatgpt::GptClient::new(),
+        }
     }
 
-    async fn handle_message(self, message: RequestMessage) -> ResponseMessage {
-        let msg = format!("You said: {}", message.text);
+    async fn handle_message(mut self, message: RequestMessage) -> ResponseMessage {
+        self.client.add_message(Role::User, message.text.clone());
+        let response = self.client.complete().await;
+        self.client.add_message(Role::Assistant, response.clone());
+
+        let msg = format!("{}", response);
         ResponseMessage {
             text: msg.to_string(),
         }
