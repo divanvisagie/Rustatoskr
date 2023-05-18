@@ -1,0 +1,9 @@
+version: '3'
+services:
+  rustatoskr:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - TELOXIDE_TOKEN=${TELOXIDE_TOKEN}
+      - REDIS_URL=${REDIS_URL}
