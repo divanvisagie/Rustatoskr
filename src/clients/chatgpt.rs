@@ -54,6 +54,7 @@ pub struct GptClient {
     messages: Vec<Message>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Role {
     System,
     User,

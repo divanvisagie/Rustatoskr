@@ -20,9 +20,12 @@ impl Capability for ChatCapability {
     }
 
     async fn execute(&mut self, message: &RequestMessage) -> ResponseMessage {
+        message.context.iter().for_each(|m| {
+            self.client.add_message(m.role.clone(), m.text.clone());
+        });
+
         self.client.add_message(Role::User, message.text.clone());
         let response = self.client.complete().await;
-        self.client.add_message(Role::Assistant, response.clone());
 
         let msg = format!("{}", response);
         ResponseMessage {

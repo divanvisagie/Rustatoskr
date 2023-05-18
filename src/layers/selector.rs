@@ -10,7 +10,7 @@ pub struct SelectorLayer {
 
 #[async_trait]
 impl Layer for SelectorLayer {
-    async fn execute(&mut self, message: &RequestMessage) -> ResponseMessage {
+    async fn execute(&mut self, message: &mut RequestMessage) -> ResponseMessage {
         let best = self.capabilities.iter_mut().reduce(|a, b| {
             if a.check(&message) > b.check(&message) {
                 a
@@ -23,7 +23,6 @@ impl Layer for SelectorLayer {
 }
 
 impl SelectorLayer {
-    #[allow(dead_code)]
     pub fn new() -> Self {
         SelectorLayer {
             capabilities: vec![Box::new(ChatCapability::new())],
@@ -62,8 +61,9 @@ mod tests {
         let message = RequestMessage {
             text: "Hello".to_string(),
             username: "test".to_string(),
+            context: Vec::new(),
         };
-        let response = layer.execute(&message).await;
+        let response = layer.execute(&mut message).await;
         assert_eq!(response.text, "Hello, test!");
     }
 }

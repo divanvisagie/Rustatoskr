@@ -13,7 +13,7 @@ pub struct SecurityLayer {
 
 #[async_trait]
 impl Layer for SecurityLayer {
-    async fn execute(&mut self, message: &RequestMessage) -> ResponseMessage {
+    async fn execute(&mut self, message: &mut RequestMessage) -> ResponseMessage {
         if message.username != self.admin {
             return ResponseMessage {
                 text: format!("You need to contact @{} to use this bot.", self.admin),
@@ -25,7 +25,6 @@ impl Layer for SecurityLayer {
 }
 
 impl SecurityLayer {
-    #[allow(dead_code)]
     pub fn new(next: Box<dyn Layer>) -> Self {
         let admin =
             env::var("TELEGRAM_ADMIN").expect("Missing TELEGRAM_ADMIN environment variable");
