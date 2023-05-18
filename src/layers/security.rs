@@ -46,7 +46,7 @@ mod tests {
     struct MockLayer {}
     #[async_trait]
     impl Layer for MockLayer {
-        async fn execute(&mut self, message: &RequestMessage) -> ResponseMessage {
+        async fn execute(&mut self, message: &mut RequestMessage) -> ResponseMessage {
             ResponseMessage {
                 text: format!("Hello, {}!", message.username),
             }
@@ -57,12 +57,13 @@ mod tests {
     async fn test_security_layer_not_allowed() {
         let mut layer = SecurityLayer::with_admin(Box::new(MockLayer {}), "valid_user".to_string());
 
-        let message = RequestMessage {
+        let mut message = RequestMessage {
             text: "Hello".to_string(),
             username: "invalid_user".to_string(),
+            context: Vec::new(),
         };
 
-        let response = layer.execute(&message).await;
+        let response = layer.execute(&mut message).await;
         assert_eq!(
             response.text,
             "You need to contact @valid_user to use this bot."
@@ -73,12 +74,13 @@ mod tests {
     async fn test_security_layer_allowed() {
         let mut layer = SecurityLayer::with_admin(Box::new(MockLayer {}), "valid_user".to_string());
 
-        let message = RequestMessage {
+        let mut message = RequestMessage {
             text: "Hello".to_string(),
             username: "valid_user".to_string(),
+            context: Vec::new(),
         };
 
-        let response = layer.execute(&message).await;
+        let response = layer.execute(&mut message).await;
         assert_eq!(response.text, "Hello, valid_user!");
     }
 }

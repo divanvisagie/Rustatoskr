@@ -58,7 +58,7 @@ mod tests {
             capabilities: vec![Box::new(MockCapability {})],
         };
 
-        let message = RequestMessage {
+        let mut message = RequestMessage {
             text: "Hello".to_string(),
             username: "test".to_string(),
             context: Vec::new(),
