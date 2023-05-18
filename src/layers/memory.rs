@@ -1,5 +1,5 @@
 extern crate redis;
-use redis::{Client, Commands, RedisResult};
+use redis::{Client, Commands};
 
 use serde::{Deserialize, Serialize};
 use std::env;
