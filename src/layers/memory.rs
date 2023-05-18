@@ -30,8 +30,9 @@ fn save_to_redis(message: StoredMessage) {
         .get_connection()
         .expect("Failed to get Redis connection");
 
+    let to_save = vec![&message];
     let json_message =
-        serde_json::to_string(&message).expect("Failed to serialize message to JSON");
+        serde_json::to_string(&to_save).expect("Failed to serialize message to JSON");
 
     let key = format!("messages:{}", message.username);
     let _: () = connection
