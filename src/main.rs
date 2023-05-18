@@ -1,4 +1,4 @@
-use capabilities::{chat::chat::ChatCapability, Capability};
+use layers::selector;
 
 use std::env;
 use teloxide::{prelude::*, types::ChatAction};
@@ -39,27 +39,21 @@ impl TelegramConverter {
 }
 
 struct Handler {
-    capabilities: Vec<Box<dyn Capability>>, // Needs to be trait Send as well
+    gateway_layer: Box<dyn layers::Layer>,
 }
 
 impl Handler {
     pub fn new() -> Self {
+        let selector_layer_box = Box::new(selector::SelectorLayer::new());
+        let security_layer = layers::security::SecurityLayer::new(selector_layer_box);
         Handler {
-            capabilities: vec![Box::new(ChatCapability::new())],
+            gateway_layer: Box::new(security_layer),
         }
     }
 
     async fn handle_message(mut self, message: RequestMessage) -> ResponseMessage {
-        let best = self.capabilities.iter_mut().reduce(|a, b| {
-            if a.check(&message) > b.check(&message) {
-                a
-            } else {
-                b
-            }
-        });
-
-        let response = best.unwrap().execute(&message);
-        response.await
+        let response = self.gateway_layer.execute(&message).await;
+        response
     }
 }
 

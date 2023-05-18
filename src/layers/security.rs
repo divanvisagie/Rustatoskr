@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use crate::{RequestMessage, ResponseMessage};
 
 use super::Layer;
-struct SecurityLayer {
+pub struct SecurityLayer {
     // fields omitted
     next: Box<dyn Layer>,
     admin: String,
@@ -16,7 +16,7 @@ impl Layer for SecurityLayer {
     async fn execute(&mut self, message: &RequestMessage) -> ResponseMessage {
         if message.username != self.admin {
             return ResponseMessage {
-                text: "You need to contact @{} to use this bot.".to_string(),
+                text: format!("You need to contact @{} to use this bot.", self.admin),
             };
         } else {
             self.next.execute(message).await
@@ -64,7 +64,10 @@ mod tests {
         };
 
         let response = layer.execute(&message).await;
-        assert_eq!(response.text, "You need to contact @{} to use this bot.");
+        assert_eq!(
+            response.text,
+            "You need to contact @valid_user to use this bot."
+        );
     }
 
     #[tokio::test]

@@ -1,9 +1,9 @@
 use async_trait::async_trait;
 
-use crate::{capabilities::Capability, RequestMessage, ResponseMessage};
-
 use super::Layer;
-struct SelectorLayer {
+use crate::capabilities::chat::chat::ChatCapability;
+use crate::{capabilities::Capability, RequestMessage, ResponseMessage};
+pub struct SelectorLayer {
     // fields omitted
     capabilities: Vec<Box<dyn Capability>>,
 }
@@ -24,8 +24,10 @@ impl Layer for SelectorLayer {
 
 impl SelectorLayer {
     #[allow(dead_code)]
-    pub fn new(capabilities: Vec<Box<dyn Capability>>) -> Self {
-        SelectorLayer { capabilities }
+    pub fn new() -> Self {
+        SelectorLayer {
+            capabilities: vec![Box::new(ChatCapability::new())],
+        }
     }
 }
 
@@ -53,7 +55,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_selector_layer() {
-        let mut layer = SelectorLayer::new(vec![Box::new(MockCapability {})]);
+        let mut layer = SelectorLayer {
+            capabilities: vec![Box::new(MockCapability {})],
+        };
 
         let message = RequestMessage {
             text: "Hello".to_string(),
