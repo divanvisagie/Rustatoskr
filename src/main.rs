@@ -5,9 +5,11 @@ use teloxide::{prelude::*, types::ChatAction};
 
 mod capabilities;
 mod clients;
+mod layers;
 
 pub struct RequestMessage {
     text: String,
+    username: String,
 }
 
 #[derive(Clone, Debug)]
@@ -25,6 +27,7 @@ impl BotConverter<Message> for TelegramConverter {
     fn bot_type_to_request_message(&self, message: &Message) -> RequestMessage {
         RequestMessage {
             text: message.text().unwrap_or_default().to_string(),
+            username: message.chat.username().unwrap_or_default().to_string(),
         }
     }
 }
