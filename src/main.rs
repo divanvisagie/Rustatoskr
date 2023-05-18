@@ -1,3 +1,5 @@
+use std::env;
+
 use chatgpt::Role;
 use teloxide::{prelude::*, types::ChatAction};
 
@@ -57,7 +59,7 @@ impl Handler {
 #[tokio::main]
 async fn main() {
     pretty_env_logger::init();
-    log::info!("Starting throw dice bot...");
+    log::info!("Starting bot...");
 
     let bot = Bot::from_env();
 
@@ -65,6 +67,21 @@ async fn main() {
     where
         T: BotConverter<Message>,
     {
+        let admin =
+            env::var("TELEGRAM_ADMIN").expect("Missing TELEGRAM_ADMIN environment variable");
+        if msg.chat.username().is_none() {
+            bot.send_message(msg.chat.id, "You need to set a username to use this bot.")
+                .await?;
+            return Ok(());
+        } else if msg.chat.username().unwrap() != admin {
+            bot.send_message(
+                msg.chat.id,
+                format!("You need to contact @{} to use this bot.", admin),
+            )
+            .await?;
+            return Ok(());
+        }
+
         let hdlr = Handler::new();
         bot.send_chat_action(msg.chat.id, ChatAction::Typing)
             .await?;
