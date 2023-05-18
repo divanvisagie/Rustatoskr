@@ -17,9 +17,10 @@ WORKDIR /app
 
 ENV TELOXIDE_TOKEN ""
 ENV REDIS_URL ""
+ENV OPENAI_API_KEY ""
 
 COPY --from=build /app/target/release/ .
-RUN chmod +x ./Rustatoskr
+RUN chmod +x ./rustatoskr
 # Set the entrypoint command for the container
 RUN ls
-CMD ["./Rustatoskr"]
+CMD ["./rustatoskr"]

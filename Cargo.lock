@@ -3,16 +3,6 @@
 version = 3
 
 [[package]]
-name = "Rustatoskr"
-version = "0.1.0"
-dependencies = [
- "log",
- "pretty_env_logger",
- "teloxide",
- "tokio",
-]
-
-[[package]]
 name = "aho-corasick"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -924,6 +914,19 @@ dependencies = [
  "wasm-streams",
  "web-sys",
  "winreg",
+]
+
+[[package]]
+name = "rustatoskr"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "pretty_env_logger",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "teloxide",
+ "tokio",
 ]
 
 [[package]]
