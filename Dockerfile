@@ -4,16 +4,18 @@ FROM rust:latest as build
 WORKDIR /app
 
 COPY Cargo.toml ./
-COPY Cargo.lock ./
 COPY src ./src
 
 RUN cargo build --release
 
 
 # Transfer to debian container for production
-FROM debian:buster-slim
-RUN apt-get update && apt-get install -y openssl libssl-dev
+FROM alpine:latest
+RUN apk update && apk add --no-cache openssl
 WORKDIR /app
+
+ARG TELOXIDE_TOKEN
+ARG TELOXIDE_PROXY
 
 COPY --from=build /app/target/release/ .
 
