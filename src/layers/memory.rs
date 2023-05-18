@@ -1,8 +1,9 @@
 extern crate redis;
-use redis::{Client, Commands};
+use redis::{Commands, Connection};
 
 use serde::{Deserialize, Serialize};
-use std::env;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 use async_trait::async_trait;
 
@@ -19,16 +20,10 @@ pub struct StoredMessage {
 
 pub struct MemoryLayer {
     next: Box<dyn Layer>,
+    connection: Arc<Mutex<Connection>>,
 }
 
-fn save_to_redis(m_to_save: StoredMessage) {
-    let url = env::var("REDIS_URL").expect("Missing REDIS_URL environment variable");
-    let client = Client::open(url).expect("Failed to connect to Redis");
-
-    let mut connection = client
-        .get_connection()
-        .expect("Failed to get Redis connection");
-
+fn save_to_redis(connection: &mut Connection, m_to_save: StoredMessage) {
     // create a reference key
     let key = format!("messages:{}", m_to_save.username);
 
@@ -55,14 +50,7 @@ fn save_to_redis(m_to_save: StoredMessage) {
         .expect("Failed to save message to Redis");
 }
 
-fn get_from_redis(username: String) -> Vec<StoredMessage> {
-    let url = env::var("REDIS_URL").expect("Missing REDIS_URL environment variable");
-    let client = Client::open(url).expect("Failed to connect to Redis");
-
-    let mut connection = client
-        .get_connection()
-        .expect("Failed to get Redis connection");
-
+fn get_from_redis(connection: &mut Connection, username: String) -> Vec<StoredMessage> {
     // create a reference key
     let key = format!("messages:{}", username);
 
@@ -78,7 +66,8 @@ fn get_from_redis(username: String) -> Vec<StoredMessage> {
 #[async_trait]
 impl Layer for MemoryLayer {
     async fn execute(&mut self, message: &mut RequestMessage) -> ResponseMessage {
-        message.context = get_from_redis(message.username.clone());
+        let conn = &mut *self.connection.lock().await;
+        message.context = get_from_redis(conn, message.username.clone());
         let res = self.next.execute(message).await;
 
         let user_message = StoredMessage {
@@ -86,7 +75,7 @@ impl Layer for MemoryLayer {
             text: message.text.clone(),
             role: Role::User,
         };
-        save_to_redis(user_message);
+        save_to_redis(conn, user_message);
 
         let bot_message = StoredMessage {
             username: message.username.clone(),
@@ -94,14 +83,14 @@ impl Layer for MemoryLayer {
             role: Role::Assistant,
         };
         log::info!("Saving bot message to Redis: {:?}", bot_message);
-        save_to_redis(bot_message);
+        save_to_redis(conn, bot_message);
 
         res
     }
 }
 
 impl MemoryLayer {
-    pub fn new(next: Box<dyn Layer>) -> Self {
-        MemoryLayer { next }
+    pub fn new(next: Box<dyn Layer>, connection: Arc<Mutex<Connection>>) -> Self {
+        MemoryLayer { next, connection }
     }
 }
