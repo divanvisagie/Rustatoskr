@@ -920,6 +920,7 @@ dependencies = [
 name = "rustatoskr"
 version = "0.1.0"
 dependencies = [
+ "futures",
  "log",
  "pretty_env_logger",
  "reqwest",

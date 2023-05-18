@@ -1,14 +1,21 @@
-use std::env;
-
-use chatgpt::Role;
+use capabilities::{chat::chat::ChatCapability, Capability};
+use futures::future::BoxFuture;
+use serde::de::Error;
+use std::future::Future;
+use std::{env, future};
 use teloxide::{prelude::*, types::ChatAction};
+use teloxide::{prelude::*, utils::command::BotCommands};
 
-mod chatgpt;
+mod capabilities;
+mod clients;
+
+use clients::chatgpt::{GptClient, Role};
 
 struct RequestMessage {
     text: String,
 }
 
+#[derive(Clone)]
 struct ResponseMessage {
     text: String,
 }
@@ -34,13 +41,15 @@ impl TelegramConverter {
 }
 
 struct Handler {
-    client: chatgpt::GptClient,
+    client: GptClient,
+    capabilities: Vec<Box<dyn Capability>>, //Needs to be trait Send as well
 }
 
 impl Handler {
     pub fn new() -> Self {
         Handler {
-            client: chatgpt::GptClient::new(),
+            client: GptClient::new(),
+            capabilities: vec![Box::new(ChatCapability::new())],
         }
     }
 
@@ -50,23 +59,36 @@ impl Handler {
         self.client.add_message(Role::Assistant, response.clone());
 
         let msg = format!("{}", response);
-        ResponseMessage {
+        let rm = ResponseMessage {
             text: msg.to_string(),
-        }
+        };
+        rm.clone()
     }
 }
 
+#[derive(BotCommands, Clone)]
+#[command(
+    rename_rule = "lowercase",
+    description = "These commands are supported:"
+)]
+enum Command {
+    #[command(description = "display this text.")]
+    Help,
+    #[command(description = "handle a username.")]
+    Username(String),
+    #[command(description = "handle a username and an age.", parse_with = "split")]
+    UsernameAndAge { username: String, age: u8 },
+}
+
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     pretty_env_logger::init();
     log::info!("Starting bot...");
 
     let bot = Bot::from_env();
+    teloxide::repl(bot, |bot: Bot, msg: Message| async move {
+        let bc = TelegramConverter::new();
 
-    async fn hdl<T>(bot: &Bot, msg: &Message, bc: T) -> Result<(), Box<dyn std::error::Error>>
-    where
-        T: BotConverter<Message>,
-    {
         let admin =
             env::var("TELEGRAM_ADMIN").expect("Missing TELEGRAM_ADMIN environment variable");
         if msg.chat.username().is_none() {
@@ -82,24 +104,19 @@ async fn main() {
             return Ok(());
         }
 
-        let hdlr = Handler::new();
         bot.send_chat_action(msg.chat.id, ChatAction::Typing)
             .await?;
 
-        let req = bc.bot_type_to_request_message(msg);
+        let hdlr = Handler::new();
 
-        let resp = hdlr.handle_message(req).await;
+        let req = bc.bot_type_to_request_message(&msg);
+        let res = hdlr.handle_message(req).await;
 
-        bot.send_message(msg.chat.id, resp.text).await?;
-
-        Ok(())
-    }
-
-    teloxide::repl(bot, |bot: Bot, msg: Message| async move {
-        let t_converter = TelegramConverter::new();
-        hdl(&bot, &msg, t_converter).await.unwrap();
+        bot.send_message(msg.chat.id, res.text).await?;
 
         Ok(())
     })
     .await;
+
+    Ok(())
 }
