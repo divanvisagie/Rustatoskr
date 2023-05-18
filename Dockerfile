@@ -15,7 +15,7 @@ RUN apk update && apk add --no-cache openssl
 WORKDIR /app
 
 ARG TELOXIDE_TOKEN
-ARG TELOXIDE_PROXY
+ARG REDIS_URL
 
 COPY --from=build /app/target/release/ .
 
