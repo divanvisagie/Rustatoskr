@@ -50,7 +50,7 @@ fn save_to_redis(connection: &mut Connection, m_to_save: StoredMessage) {
         .expect("Failed to save message to Redis");
 }
 
-fn get_from_redis(connection: &mut Connection, username: String) -> Vec<StoredMessage> {
+pub fn get_from_redis(connection: &mut Connection, username: String) -> Vec<StoredMessage> {
     // create a reference key
     let key = format!("messages:{}", username);
 

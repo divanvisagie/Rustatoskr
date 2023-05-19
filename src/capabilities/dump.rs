@@ -1,6 +1,13 @@
-use async_trait::async_trait;
+use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::{get_redis_connection, RequestMessage, ResponseMessage};
+use async_trait::async_trait;
+use redis::Commands;
+
+use crate::{
+    get_redis_connection,
+    layers::memory::{get_from_redis, StoredMessage},
+    RequestMessage, ResponseMessage,
+};
 
 use super::Capability;
 
@@ -15,26 +22,26 @@ impl Capability for MemoryDumpCapability {
         0.0
     }
 
-    async fn execute(&mut self, _message: &RequestMessage) -> ResponseMessage {
+    async fn execute(&mut self, message: &RequestMessage) -> ResponseMessage {
         let mut redis_connection = get_redis_connection();
-        let keys: Vec<String> = redis::cmd("KEYS")
-            .arg("*")
-            .query(&mut redis_connection)
-            .unwrap();
 
-        let mut result = String::new();
-        for key in keys {
-            let value: String = redis::cmd("GET")
-                .arg(&key)
-                .query(&mut redis_connection)
-                .unwrap();
-            result.push_str(&format!("{}: {}\n", key, value));
+        let value: Vec<StoredMessage> =
+            get_from_redis(&mut redis_connection, message.username.clone());
+
+        //convert value to csv
+        let mut csv_text = String::new();
+        for message in value {
+            csv_text.push_str(&format!("{}, {}\n", message.role, message.text));
         }
 
         //convert to bytes
-        let bytes = result.as_bytes().to_vec();
+        let bytes = csv_text.as_bytes().to_vec();
 
-        ResponseMessage::new_with_bytes("Dump.csv".to_string(), bytes)
+        //get unix timestamp as string
+        let timestamp = get_current_timestamp();
+        let filename = format!("Dump_{}_{}.csv", message.username, timestamp);
+
+        ResponseMessage::new_with_bytes(filename, bytes)
     }
 }
 
@@ -42,4 +49,12 @@ impl MemoryDumpCapability {
     pub fn new() -> Self {
         MemoryDumpCapability {}
     }
+}
+
+fn get_current_timestamp() -> String {
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("SystemTime before UNIX EPOCH!");
+
+    timestamp.as_secs().to_string()
 }
