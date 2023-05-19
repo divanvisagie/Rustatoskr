@@ -138,7 +138,10 @@ impl GptClient {
 
         let response = match response {
             Ok(response) => response.text().await,
-            Err(e) => panic!("Error: {}", e),
+            Err(e) => {
+                log::error!("Error: {}", e);
+                return "Error".to_string();
+            }
         };
 
         let response_text = response.unwrap();
