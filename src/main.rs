@@ -1,12 +1,13 @@
 #![allow(deprecated)]
 use layers::{memory::StoredMessage, selector};
 use redis::{Client, Connection};
+use teloxide::prelude::*;
 use tokio::sync::Mutex;
 
 use std::{env, sync::Arc};
-use teloxide::{
-    prelude::*,
-    types::{ChatAction, InputFile, KeyboardButton, KeyboardMarkup, ParseMode, ReplyMarkup},
+use teloxide::types::{
+    ChatAction, InlineKeyboardButton, InlineKeyboardMarkup, InputFile, KeyboardButton,
+    KeyboardMarkup, ParseMode, ReplyMarkup,
 };
 
 mod capabilities;
@@ -32,7 +33,39 @@ impl RequestMessage {
 #[derive(Clone, Debug)]
 pub struct ResponseMessage {
     text: String,
+
+    /// If the response is a file, it will be sent to the user as a
+    /// document and the text will be used as the filename
     bytes: Option<Vec<u8>>,
+
+    /// Inline button options
+    options: Option<Vec<String>>,
+}
+
+impl ResponseMessage {
+    pub fn new(text: String) -> Self {
+        ResponseMessage {
+            text,
+            bytes: None,
+            options: None,
+        }
+    }
+
+    pub fn new_with_bytes(text: String, bytes: Vec<u8>) -> Self {
+        ResponseMessage {
+            text,
+            bytes: Some(bytes),
+            options: None,
+        }
+    }
+
+    pub fn new_with_options(text: String, options: Vec<String>) -> Self {
+        ResponseMessage {
+            text,
+            bytes: None,
+            options: Some(options),
+        }
+    }
 }
 
 struct TelegramConverter;
@@ -90,6 +123,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     log::info!("Starting bot...");
 
     let bot = Bot::from_env();
+
+    // Command::repl(bot.clone(), answer).await;
+
     let wc = Arc::new(Mutex::new(get_redis_connection()));
     let keyboard_functions = vec!["Memory Dump", "Memory Clear"];
 
@@ -108,6 +144,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let keyboard = Arc::clone(&kbd);
 
         async move {
+            log::info!(">>> Received message: {}", msg.text().unwrap_or_default());
             let bc = TelegramConverter::new();
             let hdlr = Handler::new(conn);
 
@@ -127,6 +164,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
             if let Some(bytes) = res.bytes {
                 bot.send_document(msg.chat.id, InputFile::memory(bytes).file_name(res.text))
+                    .await?;
+
+                return Ok(());
+            }
+
+            if let Some(options) = res.options {
+                let keyboard_row: Vec<KeyboardButton> = options
+                    .iter()
+                    .map(|title| KeyboardButton::new(title.to_string()))
+                    .collect();
+
+                let keyboard = KeyboardMarkup::default()
+                    .append_row(keyboard_row)
+                    .resize_keyboard(true);
+
+                bot.send_message(msg.chat.id, res.text)
+                    .parse_mode(ParseMode::Markdown)
+                    .reply_markup(ReplyMarkup::Keyboard(keyboard))
                     .await?;
 
                 return Ok(());

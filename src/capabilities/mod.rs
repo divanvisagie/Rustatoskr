@@ -3,6 +3,7 @@ use async_trait::async_trait;
 
 pub mod chat;
 pub mod dump;
+pub mod summarize;
 
 #[async_trait]
 pub trait Capability: Send {

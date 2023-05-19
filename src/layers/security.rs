@@ -15,10 +15,10 @@ pub struct SecurityLayer {
 impl Layer for SecurityLayer {
     async fn execute(&mut self, message: &mut RequestMessage) -> ResponseMessage {
         if message.username != self.admin {
-            return ResponseMessage {
-                text: format!("You need to contact @{} to use this bot.", self.admin),
-                bytes: None,
-            };
+            return ResponseMessage::new(format!(
+                "You need to contact @{} to use this bot.",
+                self.admin
+            ));
         } else {
             self.next.execute(message).await
         }
@@ -50,6 +50,8 @@ mod tests {
         async fn execute(&mut self, message: &mut RequestMessage) -> ResponseMessage {
             ResponseMessage {
                 text: format!("Hello, {}!", message.username),
+                bytes: None,
+                options: None,
             }
         }
     }

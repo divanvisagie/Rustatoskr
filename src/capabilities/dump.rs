@@ -34,10 +34,7 @@ impl Capability for MemoryDumpCapability {
         //convert to bytes
         let bytes = result.as_bytes().to_vec();
 
-        ResponseMessage {
-            text: "Memory Dump.csv".to_string(),
-            bytes: Some(bytes),
-        }
+        ResponseMessage::new_with_bytes("Dump.csv".to_string(), bytes)
     }
 }
 

@@ -1,6 +1,7 @@
 use super::Layer;
 use crate::capabilities::chat::chat::ChatCapability;
 use crate::capabilities::dump::MemoryDumpCapability;
+use crate::capabilities::summarize::SummaryCapability;
 use crate::{capabilities::Capability, RequestMessage, ResponseMessage};
 use async_trait::async_trait;
 pub struct SelectorLayer {
@@ -28,6 +29,7 @@ impl SelectorLayer {
             capabilities: vec![
                 Box::new(MemoryDumpCapability::new()),
                 Box::new(ChatCapability::new()),
+                Box::new(SummaryCapability::new()),
             ],
         }
     }
@@ -49,10 +51,7 @@ mod tests {
             }
         }
         async fn execute(&mut self, message: &RequestMessage) -> ResponseMessage {
-            ResponseMessage {
-                text: format!("Hello, {}!", message.username),
-                bytes: None,
-            }
+            ResponseMessage::new(format!("Hello, {}!", message.username))
         }
     }
 

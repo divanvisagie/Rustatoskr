@@ -27,10 +27,7 @@ impl Capability for ChatCapability {
         self.client.add_message(Role::User, message.text.clone());
         let response = self.client.complete().await;
 
-        ResponseMessage {
-            text: response,
-            bytes: None,
-        }
+        ResponseMessage::new(response)
     }
 }
 
