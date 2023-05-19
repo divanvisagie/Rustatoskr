@@ -59,6 +59,17 @@ mod tests {
     use super::*;
     use async_trait::async_trait;
 
+    struct MockRepository {}
+
+    #[async_trait]
+    impl UserRepository for MockRepository {
+        async fn get_usernames(&self) -> Vec<String> {
+            vec!["valid_user".to_string()]
+        }
+
+        async fn save_user_to_list(&mut self, _username: String) {}
+    }
+
     struct MockLayer {}
     #[async_trait]
     impl Layer for MockLayer {
@@ -73,7 +84,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_security_layer_not_allowed() {
-        let mut layer = SecurityLayer::with_admin(Box::new(MockLayer {}), "valid_user".to_string());
+        let mock_repo = MockRepository {};
+        let mut layer = SecurityLayer::with_admin(
+            Box::new(MockLayer {}),
+            Box::new(mock_repo),
+            "valid_user".to_string(),
+        );
 
         let mut message = RequestMessage {
             text: "Hello".to_string(),
@@ -90,7 +106,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_security_layer_allowed() {
-        let mut layer = SecurityLayer::with_admin(Box::new(MockLayer {}), "valid_user".to_string());
+        let mock_repo = MockRepository {};
+        let mut layer = SecurityLayer::with_admin(
+            Box::new(MockLayer {}),
+            Box::new(mock_repo),
+            "valid_user".to_string(),
+        );
 
         let mut message = RequestMessage {
             text: "Hello".to_string(),
