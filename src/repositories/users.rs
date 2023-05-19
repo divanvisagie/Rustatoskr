@@ -26,13 +26,17 @@ impl RedisUserRepository {
 impl UserRepository for RedisUserRepository {
     async fn get_usernames(&self) -> Vec<String> {
         let conn = &mut *self.connection.lock().await;
-        let key = format!("messages:{}", "test");
 
-        let value: String = conn.get(&key).expect("Failed to get usernames");
+        let value = match conn.get("allowed_users") {
+            Ok(value) => value,
+            Err(err) => {
+                log::error!("Failed to get message from Redis: {}", err);
+                "[]".to_string()
+            }
+        };
 
         let usernames: Vec<String> =
             serde_json::from_str(&value).expect("Failed to deserialize usernames from JSON");
-
         usernames
     }
 

@@ -2,39 +2,54 @@ use std::env;
 
 use async_trait::async_trait;
 
-use crate::{RequestMessage, ResponseMessage};
+use crate::{repositories::users::UserRepository, RequestMessage, ResponseMessage};
 
 use super::Layer;
 pub struct SecurityLayer {
     // fields omitted
     next: Box<dyn Layer>,
     admin: String,
+    user_repository: Box<dyn UserRepository>,
 }
 
 #[async_trait]
 impl Layer for SecurityLayer {
     async fn execute(&mut self, message: &mut RequestMessage) -> ResponseMessage {
-        if message.username != self.admin {
+        let users = self.user_repository.get_usernames().await;
+
+        if users.contains(&message.username) || message.username == self.admin {
+            self.next.execute(message).await
+        } else {
             return ResponseMessage::new(format!(
                 "You need to contact @{} to use this bot.",
                 self.admin
             ));
-        } else {
-            self.next.execute(message).await
         }
     }
 }
 
 impl SecurityLayer {
-    pub fn new(next: Box<dyn Layer>) -> Self {
+    pub fn new(next: Box<dyn Layer>, repo: Box<dyn UserRepository>) -> Self {
         let admin =
             env::var("TELEGRAM_ADMIN").expect("Missing TELEGRAM_ADMIN environment variable");
-        SecurityLayer { next, admin }
+        SecurityLayer {
+            next,
+            admin,
+            user_repository: repo,
+        }
     }
 
     #[allow(dead_code)]
-    pub fn with_admin(next: Box<dyn Layer>, admin: String) -> Self {
-        SecurityLayer { next, admin }
+    pub fn with_admin(
+        next: Box<dyn Layer>,
+        user_repository: Box<dyn UserRepository>,
+        admin: String,
+    ) -> Self {
+        SecurityLayer {
+            next,
+            admin,
+            user_repository: user_repository,
+        }
     }
 }
 

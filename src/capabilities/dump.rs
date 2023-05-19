@@ -1,7 +1,6 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use async_trait::async_trait;
-use redis::Commands;
 
 use crate::{
     get_redis_connection,

@@ -1,18 +1,19 @@
 #![allow(deprecated)]
 use layers::{memory::StoredMessage, selector};
 use redis::{Client, Connection};
+use repositories::users::RedisUserRepository;
 use teloxide::prelude::*;
 use tokio::sync::Mutex;
 
 use std::{env, sync::Arc};
 use teloxide::types::{
-    ChatAction, InlineKeyboardButton, InlineKeyboardMarkup, InputFile, KeyboardButton,
-    KeyboardMarkup, ParseMode, ReplyMarkup,
+    ChatAction, InputFile, KeyboardButton, KeyboardMarkup, ParseMode, ReplyMarkup,
 };
 
 mod capabilities;
 mod clients;
 mod layers;
+mod repositories;
 
 pub struct RequestMessage {
     text: String,
@@ -105,8 +106,10 @@ struct Handler {
 impl Handler {
     pub fn new(conn: Arc<Mutex<Connection>>) -> Self {
         let selector_layer_box = Box::new(selector::SelectorLayer::new());
-        let memory_layer = layers::memory::MemoryLayer::new(selector_layer_box, conn);
-        let security_layer = layers::security::SecurityLayer::new(Box::new(memory_layer));
+        let memory_layer = layers::memory::MemoryLayer::new(selector_layer_box, Arc::clone(&conn));
+        let user_repository = RedisUserRepository::new(Arc::clone(&conn));
+        let security_layer =
+            layers::security::SecurityLayer::new(Box::new(memory_layer), Box::new(user_repository));
         Self {
             gateway_layer: Box::new(security_layer),
         }
@@ -123,8 +126,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     log::info!("Starting bot...");
 
     let bot = Bot::from_env();
-
-    // Command::repl(bot.clone(), answer).await;
 
     let wc = Arc::new(Mutex::new(get_redis_connection()));
     let keyboard_functions = vec!["Memory Dump", "Memory Clear"];
