@@ -14,7 +14,7 @@ pub struct ChatCapability {
 impl Capability for ChatCapability {
     fn check(&mut self, message: &RequestMessage) -> f32 {
         if !message.text.is_empty() {
-            return 1.0;
+            return 0.9;
         }
         0.5
     }
@@ -27,7 +27,10 @@ impl Capability for ChatCapability {
         self.client.add_message(Role::User, message.text.clone());
         let response = self.client.complete().await;
 
-        ResponseMessage { text: response }
+        ResponseMessage {
+            text: response,
+            bytes: None,
+        }
     }
 }
 

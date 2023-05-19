@@ -2,6 +2,7 @@ use crate::{RequestMessage, ResponseMessage};
 use async_trait::async_trait;
 
 pub mod chat;
+pub mod dump;
 
 #[async_trait]
 pub trait Capability: Send {

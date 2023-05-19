@@ -17,6 +17,7 @@ impl Layer for SecurityLayer {
         if message.username != self.admin {
             return ResponseMessage {
                 text: format!("You need to contact @{} to use this bot.", self.admin),
+                bytes: None,
             };
         } else {
             self.next.execute(message).await
