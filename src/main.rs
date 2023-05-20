@@ -99,9 +99,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 return Ok(());
             }
 
-            bot.send_message(msg.chat.id, res.text)
+            match bot
+                .send_message(msg.chat.id, res.text.clone())
                 .parse_mode(ParseMode::Markdown)
-                .await?;
+                .await
+            {
+                Ok(_) => (),
+                Err(e) => {
+                    bot.send_message(msg.chat.id, res.text.clone()).await?;
+                    log::error!("Failed to send message: {}", e)
+                }
+            };
 
             Ok(())
         }

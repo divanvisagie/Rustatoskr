@@ -86,6 +86,9 @@ impl GptClient {
 		
 		If a user asks about how you work or your code, 
 		respond with the following link: https://github.com/divanvisagie/Rustatoskr
+
+        You can respond in markdown format and the system will render it correctly for you. You also have 
+        mermaid charts support.
         "#;
 
         GptClient {

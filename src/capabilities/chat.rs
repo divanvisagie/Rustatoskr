@@ -45,7 +45,7 @@ impl ChatCapability {
     pub fn new() -> Self {
         ChatCapability {
             client: GptClient::new(),
-            description: "General questions".to_string(),
+            description: "Any question a user may have".to_string(),
         }
     }
 }

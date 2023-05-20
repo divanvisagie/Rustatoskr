@@ -19,7 +19,8 @@ pub struct PrivacyCapability {
 
 impl PrivacyCapability {
     pub fn new() -> Self {
-        let description = "Messages and queries about data privacy".to_string();
+        let description =
+            "User questions about data privacy in relation to the chatbot".to_string();
         PrivacyCapability { description }
     }
 }
