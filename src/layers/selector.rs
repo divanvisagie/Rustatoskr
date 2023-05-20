@@ -1,5 +1,6 @@
 use super::Layer;
 use crate::capabilities::chat::ChatCapability;
+use crate::capabilities::debug::DebugCapability;
 use crate::capabilities::dump::MemoryDumpCapability;
 use crate::capabilities::privacy::PrivacyCapability;
 use crate::capabilities::summarize::SummaryCapability;
@@ -23,7 +24,10 @@ impl Layer for SelectorLayer {
             }
         }
         match best {
-            Some(capability) => capability.execute(message).await,
+            Some(capability) => {
+                log::info!("Selected capability: {}", capability.get_name());
+                capability.execute(message).await
+            }
             None => ResponseMessage::new("No capability found".to_string()),
         }
     }
@@ -33,6 +37,7 @@ impl SelectorLayer {
     pub fn new() -> Self {
         SelectorLayer {
             capabilities: vec![
+                Box::new(DebugCapability::new()),
                 Box::new(PrivacyCapability::new()),
                 Box::new(MemoryDumpCapability::new()),
                 Box::new(ChatCapability::new()),

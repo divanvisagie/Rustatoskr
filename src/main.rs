@@ -110,21 +110,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let bot = Bot::from_env();
 
     let wc = Arc::new(Mutex::new(get_redis_connection()));
-    let keyboard_functions = vec!["Memory Dump", "Memory Clear"];
 
-    let keyboard_row: Vec<KeyboardButton> = keyboard_functions
-        .iter()
-        .map(|title| KeyboardButton::new(title.to_string()))
-        .collect();
-
-    let keyboard = KeyboardMarkup::default()
-        .append_row(keyboard_row)
-        .resize_keyboard(true);
-
-    let kbd = Arc::new(Mutex::new(keyboard.clone()));
     teloxide::repl(bot, move |bot: Bot, msg: Message| {
         let conn = Arc::clone(&wc);
-        let keyboard = Arc::clone(&kbd);
         log::info!(
             "Got a message from: {}: {}",
             msg.chat.username().unwrap_or_default(),
@@ -134,14 +122,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         async move {
             let bc = TelegramConverter::new();
             let hdlr = handler::Handler::new(conn);
-
-            if msg.text().unwrap_or_default() == "/debug" {
-                bot.send_message(msg.chat.id, "Welcome to the matrix!")
-                    .parse_mode(ParseMode::Markdown)
-                    .reply_markup(ReplyMarkup::Keyboard(keyboard.lock().await.clone()))
-                    .await?;
-                return Ok(());
-            }
 
             bot.send_chat_action(msg.chat.id, ChatAction::Typing)
                 .await?;
