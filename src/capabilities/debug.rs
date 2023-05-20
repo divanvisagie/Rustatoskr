@@ -1,27 +1,19 @@
 use async_trait::async_trait;
 
-use crate::{
-    capabilities::cosine_similarity, clients::embeddings::EmbeddingsClient,
-    message_types::ResponseMessage, RequestMessage,
-};
+use crate::{message_types::ResponseMessage, RequestMessage};
 
 use super::Capability;
 
-pub struct DebugCapability {
-    description: String,
-}
+pub struct DebugCapability {}
 
 #[async_trait]
 impl Capability for DebugCapability {
     async fn check(&mut self, message: &RequestMessage) -> f32 {
-        let cl = EmbeddingsClient::new();
-
-        let description_embedding = cl.get_embeddings(self.description.clone()).await.unwrap();
-
-        cosine_similarity(
-            message.embedding.as_slice(),
-            description_embedding.as_slice(),
-        )
+        if message.text == "/debug" {
+            1.0
+        } else {
+            0.0
+        }
     }
 
     async fn execute(&mut self, _message: &RequestMessage) -> ResponseMessage {
@@ -35,7 +27,6 @@ impl Capability for DebugCapability {
 
 impl DebugCapability {
     pub fn new() -> Self {
-        let description = "Debugging capability".to_string();
-        DebugCapability { description }
+        DebugCapability {}
     }
 }
