@@ -1,7 +1,7 @@
 #![allow(deprecated)]
-use layers::{memory::StoredMessage, selector};
-use redis::{Client, Connection};
-use repositories::users::RedisUserRepository;
+use layers::memory::StoredMessage;
+use redis::Client;
+
 use teloxide::prelude::*;
 use tokio::sync::Mutex;
 
@@ -12,6 +12,7 @@ use teloxide::types::{
 
 mod capabilities;
 mod clients;
+mod handler;
 mod layers;
 mod repositories;
 
@@ -101,30 +102,6 @@ fn get_redis_connection() -> redis::Connection {
         .expect("Failed to get Redis connection")
 }
 
-struct Handler {
-    gateway_layer: Box<dyn layers::Layer>,
-}
-
-impl Handler {
-    pub fn new(conn: Arc<Mutex<Connection>>) -> Self {
-        let selector_layer = selector::SelectorLayer::new();
-        let embedding_layer = layers::embedding::EmbeddingLayer::new(Box::new(selector_layer));
-        let memory_layer =
-            layers::memory::MemoryLayer::new(Box::new(embedding_layer), Arc::clone(&conn));
-
-        let user_repository = RedisUserRepository::new(Arc::clone(&conn));
-        let security_layer =
-            layers::security::SecurityLayer::new(Box::new(memory_layer), Box::new(user_repository));
-        Self {
-            gateway_layer: Box::new(security_layer),
-        }
-    }
-
-    async fn handle_message(mut self, message: &mut RequestMessage) -> ResponseMessage {
-        self.gateway_layer.execute(message).await
-    }
-}
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     pretty_env_logger::init();
@@ -156,7 +133,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
         async move {
             let bc = TelegramConverter::new();
-            let hdlr = Handler::new(conn);
+            let hdlr = handler::Handler::new(conn);
 
             if msg.text().unwrap_or_default() == "/debug" {
                 bot.send_message(msg.chat.id, "Welcome to the matrix!")
