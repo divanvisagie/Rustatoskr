@@ -1,6 +1,9 @@
 use crate::{
-    capabilities::Capability,
-    clients::chatgpt::{GptClient, Role},
+    capabilities::{cosine_similarity, Capability},
+    clients::{
+        chatgpt::{GptClient, Role},
+        embeddings::EmbeddingsClient,
+    },
     RequestMessage, ResponseMessage,
 };
 use async_trait::async_trait;
@@ -8,15 +11,23 @@ use async_trait::async_trait;
 pub struct ChatCapability {
     // fields omitted
     client: GptClient,
+    description: String,
 }
 
 #[async_trait]
 impl Capability for ChatCapability {
-    fn check(&mut self, message: &RequestMessage) -> f32 {
-        if !message.text.is_empty() {
-            return 0.9;
-        }
-        0.5
+    async fn check(&mut self, message: &RequestMessage) -> f32 {
+        let cl = EmbeddingsClient::new();
+
+        let description_embedding = cl.get_embeddings(self.description.clone()).await.unwrap();
+        let message_embedding = cl.get_embeddings(message.text.clone()).await.unwrap();
+
+        let similarity = cosine_similarity(
+            message_embedding.as_slice(),
+            description_embedding.as_slice(),
+        );
+        log::info!("Chat capability similarity: {}", similarity.clone());
+        similarity
     }
 
     async fn execute(&mut self, message: &RequestMessage) -> ResponseMessage {
@@ -35,6 +46,7 @@ impl ChatCapability {
     pub fn new() -> Self {
         ChatCapability {
             client: GptClient::new(),
+            description: "General questions".to_string(),
         }
     }
 }

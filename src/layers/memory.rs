@@ -27,10 +27,7 @@ fn save_to_redis(connection: &mut Connection, m_to_save: StoredMessage) {
     // create a reference key
     let key = format!("messages:{}", m_to_save.username);
 
-    log::info!("Saving message to Redis: {:?}", m_to_save);
-
     let value_for_key: String = connection.get(&key).unwrap_or("[]".to_string());
-    log::info!("Value for key: {}", value_for_key);
 
     let mut current_messages: Vec<StoredMessage> =
         serde_json::from_str(&value_for_key).expect("Failed to deserialize messages from JSON");
@@ -55,7 +52,6 @@ pub fn get_from_redis(connection: &mut Connection, username: String) -> Vec<Stor
     let key = format!("messages:{}", username);
 
     let value_for_key: String = connection.get(&key).unwrap_or("[]".to_string());
-    log::info!("Value for key: {}", value_for_key);
 
     let current_messages: Vec<StoredMessage> =
         serde_json::from_str(&value_for_key).expect("Failed to deserialize messages from JSON");
@@ -82,7 +78,6 @@ impl Layer for MemoryLayer {
             text: res.text.clone(),
             role: Role::Assistant,
         };
-        log::info!("Saving bot message to Redis: {:?}", bot_message);
         save_to_redis(conn, bot_message);
 
         res

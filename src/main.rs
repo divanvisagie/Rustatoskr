@@ -143,9 +143,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     teloxide::repl(bot, move |bot: Bot, msg: Message| {
         let conn = Arc::clone(&wc);
         let keyboard = Arc::clone(&kbd);
+        log::info!(
+            "Got a message from: {}: {}",
+            msg.chat.username().unwrap_or_default(),
+            msg.text().unwrap_or_default()
+        );
 
         async move {
-            log::info!(">>> Received message: {}", msg.text().unwrap_or_default());
             let bc = TelegramConverter::new();
             let hdlr = Handler::new(conn);
 

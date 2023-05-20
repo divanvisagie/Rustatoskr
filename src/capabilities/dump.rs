@@ -14,7 +14,7 @@ pub struct MemoryDumpCapability {}
 
 #[async_trait]
 impl Capability for MemoryDumpCapability {
-    fn check(&mut self, message: &RequestMessage) -> f32 {
+    async fn check(&mut self, message: &RequestMessage) -> f32 {
         if message.text == "Memory Dump" {
             return 1.0;
         }

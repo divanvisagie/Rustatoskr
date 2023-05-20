@@ -16,7 +16,7 @@ fn is_link(string: &str) -> bool {
 
 #[async_trait]
 impl Capability for SummaryCapability {
-    fn check(&mut self, message: &RequestMessage) -> f32 {
+    async fn check(&mut self, message: &RequestMessage) -> f32 {
         if is_link(&message.text) {
             return 1.0;
         }
