@@ -50,6 +50,7 @@ mod tests {
             text: "https://www.google.com".to_string(),
             username: "test".to_string(),
             context: Vec::new(),
+            embedding: Vec::new(),
         };
         let response = summary_capability.execute(&message).await.clone();
         assert_eq!(response.text, "Summary of https://www.google.com goes here");
@@ -62,6 +63,7 @@ mod tests {
             text: "https://www.google.com".to_string(),
             username: "test".to_string(),
             context: Vec::new(),
+            embedding: Vec::new(),
         };
         let score = summary_capability.check(&message).await;
         assert_eq!(score, 1.0);
@@ -74,6 +76,7 @@ mod tests {
             text: "Hello".to_string(),
             username: "test".to_string(),
             context: Vec::new(),
+            embedding: Vec::new(),
         };
         let score = summary_capability.check(&message).await;
         assert_eq!(score, 0.0);

@@ -95,6 +95,7 @@ mod tests {
             text: "Hello".to_string(),
             username: "invalid_user".to_string(),
             context: Vec::new(),
+            embedding: Vec::new(),
         };
 
         let response = layer.execute(&mut message).await;
@@ -117,6 +118,7 @@ mod tests {
             text: "Hello".to_string(),
             username: "valid_user".to_string(),
             context: Vec::new(),
+            embedding: Vec::new(),
         };
 
         let response = layer.execute(&mut message).await;

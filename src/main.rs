@@ -19,6 +19,7 @@ pub struct RequestMessage {
     text: String,
     username: String,
     context: Vec<StoredMessage>,
+    embedding: Vec<f32>,
 }
 
 impl RequestMessage {
@@ -27,6 +28,7 @@ impl RequestMessage {
             text,
             username,
             context: Vec::new(),
+            embedding: Vec::new(),
         }
     }
 }
@@ -105,8 +107,11 @@ struct Handler {
 
 impl Handler {
     pub fn new(conn: Arc<Mutex<Connection>>) -> Self {
-        let selector_layer_box = Box::new(selector::SelectorLayer::new());
-        let memory_layer = layers::memory::MemoryLayer::new(selector_layer_box, Arc::clone(&conn));
+        let selector_layer = selector::SelectorLayer::new();
+        let embedding_layer = layers::embedding::EmbeddingLayer::new(Box::new(selector_layer));
+        let memory_layer =
+            layers::memory::MemoryLayer::new(Box::new(embedding_layer), Arc::clone(&conn));
+
         let user_repository = RedisUserRepository::new(Arc::clone(&conn));
         let security_layer =
             layers::security::SecurityLayer::new(Box::new(memory_layer), Box::new(user_repository));

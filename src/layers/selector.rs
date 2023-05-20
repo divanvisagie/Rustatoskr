@@ -6,7 +6,6 @@ use crate::capabilities::summarize::SummaryCapability;
 use crate::{capabilities::Capability, RequestMessage, ResponseMessage};
 use async_trait::async_trait;
 pub struct SelectorLayer {
-    // fields omitted
     capabilities: Vec<Box<dyn Capability>>,
 }
 
@@ -27,7 +26,6 @@ impl Layer for SelectorLayer {
             Some(capability) => capability.execute(message).await,
             None => ResponseMessage::new("No capability found".to_string()),
         }
-        // best.unwrap().execute(message).await
     }
 }
 
@@ -74,6 +72,7 @@ mod tests {
             text: "Hello".to_string(),
             username: "test".to_string(),
             context: Vec::new(),
+            embedding: Vec::new(),
         };
         let response = layer.execute(&mut message).await;
         assert_eq!(response.text, "Hello, test!");

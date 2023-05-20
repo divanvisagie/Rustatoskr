@@ -1,6 +1,7 @@
 use crate::{RequestMessage, ResponseMessage};
 use async_trait::async_trait;
 
+pub mod embedding;
 pub mod memory;
 pub mod security;
 pub mod selector;
