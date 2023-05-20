@@ -55,27 +55,27 @@ mod tests {
         assert_eq!(response.text, "Summary of https://www.google.com goes here");
     }
 
-    #[test]
-    fn test_check_when_given_link() {
+    #[tokio::test]
+    async fn test_check_when_given_link() {
         let mut summary_capability = SummaryCapability::new();
         let message = RequestMessage {
             text: "https://www.google.com".to_string(),
             username: "test".to_string(),
             context: Vec::new(),
         };
-        let score = summary_capability.check(&message);
+        let score = summary_capability.check(&message).await;
         assert_eq!(score, 1.0);
     }
 
-    #[test]
-    fn test_check_when_given_non_link() {
+    #[tokio::test]
+    async fn test_check_when_given_non_link() {
         let mut summary_capability = SummaryCapability::new();
         let message = RequestMessage {
             text: "Hello".to_string(),
             username: "test".to_string(),
             context: Vec::new(),
         };
-        let score = summary_capability.check(&message);
+        let score = summary_capability.check(&message).await;
         assert_eq!(score, 0.0);
     }
 }

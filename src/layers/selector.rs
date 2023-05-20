@@ -23,7 +23,11 @@ impl Layer for SelectorLayer {
                 best = Some(capability);
             }
         }
-        best.unwrap().execute(message).await
+        match best {
+            Some(capability) => capability.execute(message).await,
+            None => ResponseMessage::new("No capability found".to_string()),
+        }
+        // best.unwrap().execute(message).await
     }
 }
 
@@ -48,8 +52,8 @@ mod tests {
     struct MockCapability {}
     #[async_trait]
     impl Capability for MockCapability {
-        fn check(&mut self, message: &RequestMessage) -> f32 {
-            if message.text == "hi" {
+        async fn check(&mut self, message: &RequestMessage) -> f32 {
+            if message.text == "Hello" {
                 1.0
             } else {
                 0.0
