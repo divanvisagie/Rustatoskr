@@ -21,6 +21,6 @@ RUST_LOG=trace cargo watch -c -x run
 
 
 ## Todo
-- [x] Move message embeddings to be a one off in the handler
+- [x] Move message embeddings to be a one off by creating an embedding layer
 - [x] Create description embeddings on registration of a new capability, possibly long term hashed for even fewer calls to the api
 - [x] Try find a way to do embeddings locally that doesn't crash async
