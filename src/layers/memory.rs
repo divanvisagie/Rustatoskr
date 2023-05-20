@@ -7,7 +7,7 @@ use tokio::sync::Mutex;
 
 use async_trait::async_trait;
 
-use crate::{clients::chatgpt::Role, RequestMessage, ResponseMessage};
+use crate::{clients::chatgpt::Role, message_types::ResponseMessage, RequestMessage};
 
 use super::Layer;
 

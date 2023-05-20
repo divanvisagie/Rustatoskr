@@ -1,4 +1,4 @@
-use crate::{RequestMessage, ResponseMessage};
+use crate::{message_types::ResponseMessage, RequestMessage};
 use async_trait::async_trait;
 
 pub mod chat;

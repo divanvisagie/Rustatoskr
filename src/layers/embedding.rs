@@ -1,6 +1,8 @@
 use async_trait::async_trait;
 
-use crate::{clients::embeddings::EmbeddingsClient, RequestMessage, ResponseMessage};
+use crate::{
+    clients::embeddings::EmbeddingsClient, message_types::ResponseMessage, RequestMessage,
+};
 
 use super::Layer;
 

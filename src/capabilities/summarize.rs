@@ -3,7 +3,7 @@ use std::vec;
 use async_trait::async_trait;
 use regex::Regex;
 
-use crate::{RequestMessage, ResponseMessage};
+use crate::{message_types::ResponseMessage, RequestMessage};
 
 use super::Capability;
 

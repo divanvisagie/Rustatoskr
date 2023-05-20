@@ -4,7 +4,8 @@ use crate::capabilities::debug::DebugCapability;
 use crate::capabilities::dump::MemoryDumpCapability;
 use crate::capabilities::privacy::PrivacyCapability;
 use crate::capabilities::summarize::SummaryCapability;
-use crate::{capabilities::Capability, RequestMessage, ResponseMessage};
+use crate::message_types::ResponseMessage;
+use crate::{capabilities::Capability, RequestMessage};
 use async_trait::async_trait;
 pub struct SelectorLayer {
     capabilities: Vec<Box<dyn Capability>>,
@@ -18,6 +19,7 @@ impl Layer for SelectorLayer {
 
         for capability in &mut self.capabilities {
             let score = capability.check(message).await;
+            log::info!("{} similarity: {}", capability.get_name(), score);
             if score > best_score {
                 best_score = score;
                 best = Some(capability);

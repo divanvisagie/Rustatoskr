@@ -1,6 +1,5 @@
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use std::any::type_name;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct BERTEmbedding {
@@ -8,8 +7,8 @@ struct BERTEmbedding {
 }
 
 use crate::{
-    capabilities::cosine_similarity, clients::embeddings::EmbeddingsClient, RequestMessage,
-    ResponseMessage,
+    capabilities::cosine_similarity, clients::embeddings::EmbeddingsClient,
+    message_types::ResponseMessage, RequestMessage,
 };
 
 use super::Capability;
@@ -32,16 +31,10 @@ impl Capability for PrivacyCapability {
 
         let description_embedding = cl.get_embeddings(self.description.clone()).await.unwrap();
 
-        let similarity = cosine_similarity(
+        cosine_similarity(
             message.embedding.as_slice(),
             description_embedding.as_slice(),
-        );
-        log::info!(
-            "{} similarity: {}",
-            type_name::<PrivacyCapability>(),
-            similarity.clone()
-        );
-        similarity
+        )
     }
 
     async fn execute(&mut self, _message: &RequestMessage) -> ResponseMessage {

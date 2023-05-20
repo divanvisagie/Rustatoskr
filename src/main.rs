@@ -1,5 +1,5 @@
 #![allow(deprecated)]
-use layers::memory::StoredMessage;
+use message_types::RequestMessage;
 use redis::Client;
 
 use teloxide::prelude::*;
@@ -14,63 +14,8 @@ mod capabilities;
 mod clients;
 mod handler;
 mod layers;
+mod message_types;
 mod repositories;
-
-pub struct RequestMessage {
-    text: String,
-    username: String,
-    context: Vec<StoredMessage>,
-    embedding: Vec<f32>,
-}
-
-impl RequestMessage {
-    pub fn new(text: String, username: String) -> Self {
-        RequestMessage {
-            text,
-            username,
-            context: Vec::new(),
-            embedding: Vec::new(),
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct ResponseMessage {
-    text: String,
-
-    /// If the response is a file, it will be sent to the user as a
-    /// document and the text will be used as the filename
-    bytes: Option<Vec<u8>>,
-
-    /// Inline button options
-    options: Option<Vec<String>>,
-}
-
-impl ResponseMessage {
-    pub fn new(text: String) -> Self {
-        ResponseMessage {
-            text,
-            bytes: None,
-            options: None,
-        }
-    }
-
-    pub fn new_with_bytes(text: String, bytes: Vec<u8>) -> Self {
-        ResponseMessage {
-            text,
-            bytes: Some(bytes),
-            options: None,
-        }
-    }
-
-    pub fn new_with_options(text: String, options: Vec<String>) -> Self {
-        ResponseMessage {
-            text,
-            bytes: None,
-            options: Some(options),
-        }
-    }
-}
 
 struct TelegramConverter;
 
@@ -114,7 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     teloxide::repl(bot, move |bot: Bot, msg: Message| {
         let conn = Arc::clone(&wc);
         log::info!(
-            "Got a message from: {}: {}",
+            "{} sent the message: {}",
             msg.chat.username().unwrap_or_default(),
             msg.text().unwrap_or_default()
         );

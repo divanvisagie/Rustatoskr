@@ -5,7 +5,8 @@ use async_trait::async_trait;
 use crate::{
     get_redis_connection,
     layers::memory::{get_from_redis, StoredMessage},
-    RequestMessage, ResponseMessage,
+    message_types::ResponseMessage,
+    RequestMessage,
 };
 
 use super::Capability;

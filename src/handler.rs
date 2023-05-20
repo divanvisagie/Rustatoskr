@@ -8,8 +8,9 @@ use crate::{
         embedding::EmbeddingLayer, memory::MemoryLayer, security::SecurityLayer,
         selector::SelectorLayer, Layer,
     },
+    message_types::ResponseMessage,
     repositories::users::RedisUserRepository,
-    RequestMessage, ResponseMessage,
+    RequestMessage,
 };
 
 pub struct Handler {

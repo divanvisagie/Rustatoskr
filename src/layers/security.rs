@@ -2,7 +2,7 @@ use std::env;
 
 use async_trait::async_trait;
 
-use crate::{repositories::users::UserRepository, RequestMessage, ResponseMessage};
+use crate::{message_types::ResponseMessage, repositories::users::UserRepository, RequestMessage};
 
 use super::Layer;
 pub struct SecurityLayer {
