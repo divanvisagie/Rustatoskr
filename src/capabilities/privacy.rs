@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
+use std::any::type_name;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct BERTEmbedding {
@@ -35,7 +36,11 @@ impl Capability for PrivacyCapability {
             message.embedding.as_slice(),
             description_embedding.as_slice(),
         );
-        log::info!("Privacy capability similarity: {}", similarity.clone());
+        log::info!(
+            "{} similarity: {}",
+            type_name::<PrivacyCapability>(),
+            similarity.clone()
+        );
         similarity
     }
 

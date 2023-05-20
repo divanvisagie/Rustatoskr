@@ -50,6 +50,7 @@ fn parse_response(json_str: &str) -> Result<ChatResponse> {
     serde_json::from_str(json_str)
 }
 
+#[derive(Debug)]
 pub struct GptClient {
     messages: Vec<Message>,
 }

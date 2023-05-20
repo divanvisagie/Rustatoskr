@@ -7,7 +7,9 @@ use crate::{
     RequestMessage, ResponseMessage,
 };
 use async_trait::async_trait;
+use std::any::type_name;
 
+#[derive(Debug)]
 pub struct ChatCapability {
     // fields omitted
     client: GptClient,
@@ -25,7 +27,11 @@ impl Capability for ChatCapability {
             message.embedding.as_slice(),
             description_embedding.as_slice(),
         );
-        log::info!("Chat capability similarity: {}", similarity.clone());
+        log::info!(
+            "{} similarity: {}",
+            type_name::<ChatCapability>(),
+            similarity.clone()
+        );
         similarity
     }
 

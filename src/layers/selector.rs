@@ -1,5 +1,5 @@
 use super::Layer;
-use crate::capabilities::chat::chat::ChatCapability;
+use crate::capabilities::chat::ChatCapability;
 use crate::capabilities::dump::MemoryDumpCapability;
 use crate::capabilities::privacy::PrivacyCapability;
 use crate::capabilities::summarize::SummaryCapability;
