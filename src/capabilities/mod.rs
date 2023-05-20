@@ -10,7 +10,9 @@ pub mod summarize;
 #[async_trait]
 pub trait Capability: Send {
     fn get_name(&self) -> String {
-        std::any::type_name::<Self>().to_string()
+        let raw = std::any::type_name::<Self>().to_string();
+        let parts: Vec<&str> = raw.split("::").collect();
+        parts.last().unwrap().to_string()
     }
     async fn check(&mut self, message: &RequestMessage) -> f32;
     async fn execute(&mut self, message: &RequestMessage) -> ResponseMessage;
