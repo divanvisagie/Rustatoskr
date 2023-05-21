@@ -125,11 +125,22 @@ pub async fn start_bot(sender: Sender<String>) {
 }
 
 pub async fn start_server() {
+    let port = match env::var("PORT") {
+        Ok(val) => val,
+        Err(_) => "8080".to_string(),
+    };
+    let port = port.parse::<u16>().expect("PORT must be a number");
+
+    let host = match env::var("HOST") {
+        Ok(val) => val,
+        Err(_) => "127.0.0.1".to_string(),
+    };
+
     let _h = HttpServer::new(|| {
         App::new().service(hello)
         // .route("/hey", web::get().to(manual_hello))
     })
-    .bind(("127.0.0.1", 8080))
+    .bind((host, port))
     .unwrap()
     .run()
     .await;

@@ -7,3 +7,4 @@ services:
     environment:
       - TELOXIDE_TOKEN=${TELOXIDE_TOKEN}
       - REDIS_URL=${REDIS_URL}
+      - PORT=8080
