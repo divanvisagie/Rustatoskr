@@ -1,6 +1,10 @@
 #![allow(deprecated)]
 use message_types::RequestMessage;
 use redis::Client;
+use std::sync::mpsc;
+use std::sync::mpsc::{Receiver, Sender};
+use std::thread;
+use std::time::Duration;
 
 use teloxide::prelude::*;
 use tokio::sync::Mutex;
@@ -49,13 +53,15 @@ fn get_redis_connection() -> redis::Connection {
         .expect("Failed to get Redis connection")
 }
 
-pub async fn start_bot() {
+pub async fn start_bot(sender: Sender<String>) {
     let bot = Bot::from_env();
 
     let wc = Arc::new(Mutex::new(get_redis_connection()));
+    let sdr = Arc::new(Mutex::new(sender));
 
     teloxide::repl(bot, move |bot: Bot, msg: Message| {
         let conn = Arc::clone(&wc);
+        let sdr = Arc::clone(&sdr);
         log::info!(
             "{} sent the message: {}",
             msg.chat.username().unwrap_or_default(),
@@ -70,6 +76,9 @@ pub async fn start_bot() {
                 .await?;
 
             let mut req = bc.bot_type_to_request_message(&msg);
+
+            sdr.lock().await.send(req.text.clone()).unwrap();
+
             let res = hdlr.handle_message(&mut req).await;
 
             if let Some(bytes) = res.bytes {
@@ -126,6 +135,24 @@ pub async fn start_server() {
     .await;
 }
 
+pub async fn start_receiver(receiver: Receiver<String>) {
+    loop {
+        match receiver.try_recv() {
+            Ok(message) => {
+                log::info!("Received message from channel: {}", message);
+            }
+            Err(mpsc::TryRecvError::Empty) => {
+                log::info!("No message received yet. Waiting...");
+                thread::sleep(Duration::from_secs(1));
+            }
+            Err(mpsc::TryRecvError::Disconnected) => {
+                log::info!("Sender has been disconnected.");
+                break;
+            }
+        }
+    }
+}
+
 #[get("/health")]
 async fn hello() -> impl Responder {
     HttpResponse::Ok().body("All is good")
@@ -136,10 +163,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     pretty_env_logger::init();
     log::info!("Starting bot...");
 
-    let http_server = start_server();
-    let bot = start_bot();
+    let (sender, receiver): (Sender<String>, Receiver<String>) = mpsc::channel();
 
-    join!(http_server, bot);
+    let http_server = start_server();
+    let bot = start_bot(sender);
+    let receiver_task = tokio::spawn(start_receiver(receiver));
+
+    let _ = join!(http_server, bot, receiver_task);
 
     Ok(())
 }
