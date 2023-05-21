@@ -142,7 +142,6 @@ pub async fn start_receiver(receiver: Receiver<String>) {
                 log::info!("Received message from channel: {}", message);
             }
             Err(mpsc::TryRecvError::Empty) => {
-                log::info!("No message received yet. Waiting...");
                 thread::sleep(Duration::from_secs(1));
             }
             Err(mpsc::TryRecvError::Disconnected) => {
