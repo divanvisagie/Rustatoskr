@@ -7,6 +7,10 @@ pub mod dump;
 pub mod privacy;
 pub mod summarize;
 
+/// A capability is a feature that the bot can perform. Capabilities are chosen
+/// by a capability selector which expects to be able to call the `check` method
+/// to determine a score between -1.0 and 1.0. The capability with the highest score
+/// is chosen to handle the request.
 #[async_trait]
 pub trait Capability: Send {
     fn get_name(&self) -> String {
@@ -14,7 +18,11 @@ pub trait Capability: Send {
         let parts: Vec<&str> = raw.split("::").collect();
         parts.last().unwrap().to_string()
     }
+    /// Returns a score between -1.0 and 1.0 indicating how well this capability
+    /// can handle the request.
     async fn check(&mut self, message: &RequestMessage) -> f32;
+
+    /// Executes the capability and returns a response message.
     async fn execute(&mut self, message: &RequestMessage) -> ResponseMessage;
 }
 

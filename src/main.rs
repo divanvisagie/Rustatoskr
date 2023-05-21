@@ -5,7 +5,7 @@ use redis::Client;
 use teloxide::prelude::*;
 use tokio::sync::Mutex;
 
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, App, HttpResponse, HttpServer, Responder};
 use std::{env, sync::Arc};
 use teloxide::types::{
     ChatAction, InputFile, KeyboardButton, KeyboardMarkup, ParseMode, ReplyMarkup,
