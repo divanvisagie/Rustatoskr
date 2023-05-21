@@ -5,10 +5,12 @@ use redis::Client;
 use teloxide::prelude::*;
 use tokio::sync::Mutex;
 
+use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use std::{env, sync::Arc};
 use teloxide::types::{
     ChatAction, InputFile, KeyboardButton, KeyboardMarkup, ParseMode, ReplyMarkup,
 };
+use tokio::join;
 
 mod capabilities;
 mod clients;
@@ -47,11 +49,7 @@ fn get_redis_connection() -> redis::Connection {
         .expect("Failed to get Redis connection")
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    pretty_env_logger::init();
-    log::info!("Starting bot...");
-
+pub async fn start_bot() {
     let bot = Bot::from_env();
 
     let wc = Arc::new(Mutex::new(get_redis_connection()));
@@ -115,6 +113,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         }
     })
     .await;
+}
+
+pub async fn start_server() {
+    let _h = HttpServer::new(|| {
+        App::new().service(hello)
+        // .route("/hey", web::get().to(manual_hello))
+    })
+    .bind(("127.0.0.1", 8080))
+    .unwrap()
+    .run()
+    .await;
+}
+
+#[get("/health")]
+async fn hello() -> impl Responder {
+    HttpResponse::Ok().body("All is good")
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    pretty_env_logger::init();
+    log::info!("Starting bot...");
+
+    let http_server = start_server();
+    let bot = start_bot();
+
+    join!(http_server, bot);
 
     Ok(())
 }
