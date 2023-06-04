@@ -48,7 +48,7 @@ impl SecurityLayer {
         SecurityLayer {
             next,
             admin,
-            user_repository: user_repository,
+            user_repository,
         }
     }
 }
@@ -63,7 +63,7 @@ mod tests {
 
     #[async_trait]
     impl UserRepository for MockRepository {
-        async fn get_usernames(&self) -> Vec<String> {
+        async fn get_usernames(&mut self) -> Vec<String> {
             vec!["valid_user".to_string()]
         }
 

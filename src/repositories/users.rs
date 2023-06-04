@@ -8,7 +8,7 @@ use tokio::sync::Mutex;
 
 #[async_trait]
 pub trait UserRepository: Send + Sync {
-    async fn get_usernames(&self) -> Vec<String>;
+    async fn get_usernames(&mut self) -> Vec<String>;
     async fn save_user_to_list(&mut self, username: String);
 }
 
@@ -22,14 +22,20 @@ impl RedisUserRepository {
     }
 }
 
+async fn create_allowed_users(conn: &mut Connection) {
+    let _: () = conn
+        .set("allowed_users", "[]")
+        .expect("Failed to save message to Redis");
+}
 #[async_trait]
 impl UserRepository for RedisUserRepository {
-    async fn get_usernames(&self) -> Vec<String> {
-        let conn = &mut *self.connection.lock().await;
+    async fn get_usernames(&mut self) -> Vec<String> {
+        let conn = &mut self.connection.lock().await;
 
         let value = match conn.get("allowed_users") {
             Ok(value) => value,
             Err(err) => {
+                create_allowed_users(conn).await;
                 log::error!("Failed to get message from Redis: {}", err);
                 "[]".to_string()
             }
