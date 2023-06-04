@@ -20,7 +20,7 @@ pub struct PrivacyCapability {
 impl PrivacyCapability {
     pub fn new() -> Self {
         let description =
-            "User questions about data privacy in relation to the chatbot".to_string();
+            "How do you handle my personal data".to_string();
         PrivacyCapability { description }
     }
 }
@@ -39,11 +39,7 @@ impl Capability for PrivacyCapability {
     }
 
     async fn execute(&mut self, _message: &RequestMessage) -> ResponseMessage {
-        let res = r#"If you are seeing this that means that the experiment
-        was successful and that this was selected by bot intelligence rather
-        than simple number jigging"#
-            .to_string();
-
-        ResponseMessage::new(res)
+        let res = include_str!("canned_response.txt");
+        ResponseMessage::new(res.to_string())
     }
 }
