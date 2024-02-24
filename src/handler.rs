@@ -21,7 +21,7 @@ impl Handler {
     pub fn new(conn: Arc<Mutex<Connection>>) -> Self {
         let selector_layer = SelectorLayer::new();
         let embedding_layer = EmbeddingLayer::new(Box::new(selector_layer));
-        let memory_layer = MemoryLayer::new(Box::new(embedding_layer), Arc::clone(&conn));
+        let memory_layer = MemoryLayer::new(Box::new(embedding_layer));
 
         let user_repository = RedisUserRepository::new(Arc::clone(&conn));
         let security_layer = SecurityLayer::new(Box::new(memory_layer), Box::new(user_repository));

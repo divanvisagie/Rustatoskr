@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -79,7 +79,9 @@ impl Notion {
             self.journal_page_id
         );
 
-        let body = self.do_request_to_notion("POST", &url, Some(json_body)).await?;
+        let body = self
+            .do_request_to_notion("POST", &url, Some(json_body))
+            .await?;
         let response: TodaysPageResult = serde_json::from_slice(&body)?;
 
         Ok(response)
@@ -125,12 +127,10 @@ impl Notion {
         });
 
         let json_body = serde_json::to_vec(&request_body)?;
-        let url = format!(
-            "https://api.notion.com/v1/blocks/{}/children",
-            result.id
-        );
+        let url = format!("https://api.notion.com/v1/blocks/{}/children", result.id);
 
-        self.do_request_to_notion("PATCH", &url, Some(json_body)).await?;
+        self.do_request_to_notion("PATCH", &url, Some(json_body))
+            .await?;
 
         Ok(result)
     }
@@ -175,10 +175,11 @@ impl Notion {
         let json_body = serde_json::to_vec(&request_body)?;
         let url = "https://api.notion.com/v1/pages";
 
-        let body = self.do_request_to_notion("POST", url, Some(json_body)).await?;
+        let body = self
+            .do_request_to_notion("POST", url, Some(json_body))
+            .await?;
         let response: ResultObject = serde_json::from_slice(&body)?;
 
         Ok(response)
     }
 }
-
