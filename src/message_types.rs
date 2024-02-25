@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::layers::memory::StoredMessage;
 
 pub struct RequestMessage {

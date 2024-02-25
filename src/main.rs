@@ -1,16 +1,15 @@
 #![allow(deprecated)]
 use message_types::RequestMessage;
 use std::sync::mpsc;
-use std::sync::mpsc::{Receiver, Sender};
+use std::sync::mpsc::Receiver;
 use std::thread;
 use std::time::Duration;
 use tracing::{error, info};
 
 use teloxide::prelude::*;
-use tokio::sync::Mutex;
 
 use actix_web::{get, App, HttpResponse, HttpServer, Responder};
-use std::{env, sync::Arc};
+use std::env;
 use teloxide::types::{
     ChatAction, InputFile, KeyboardButton, KeyboardMarkup, ParseMode, ReplyMarkup,
 };
@@ -44,7 +43,7 @@ impl TelegramConverter {
     }
 }
 
-pub async fn start_bot(sender: Sender<String>) {
+pub async fn start_bot() {
     let bot = Bot::from_env();
 
     teloxide::repl(bot, move |bot: Bot, msg: Message| {
@@ -157,13 +156,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     tracing_subscriber::fmt::init();
     info!("Starting bot...");
 
-    let (sender, receiver): (Sender<String>, Receiver<String>) = mpsc::channel();
-
     let http_server = start_server();
-    let bot = start_bot(sender);
-    let receiver_task = tokio::spawn(start_receiver(receiver));
+    let bot = start_bot();
 
-    let _ = join!(http_server, bot, receiver_task);
+    let _ = join!(http_server, bot);
 
     Ok(())
 }

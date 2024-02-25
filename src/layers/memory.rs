@@ -1,7 +1,7 @@
 use std::borrow::Borrow;
 
 use serde::{Deserialize, Serialize};
-use tracing::{error, info};
+use tracing::error;
 
 use async_trait::async_trait;
 
@@ -44,7 +44,7 @@ impl Layer for MemoryLayer {
             }
         };
 
-        //convert context to stored messages
+        // Convert context to stored messages
         let mut stored_context: Vec<StoredMessage> = Vec::new();
         for chat_response in context {
             stored_context.push(StoredMessage {

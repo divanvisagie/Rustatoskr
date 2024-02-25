@@ -3,7 +3,7 @@ use std::{env, fmt};
 use reqwest::header;
 use serde::{Deserialize, Serialize};
 use serde_json::Result;
-use tracing::{error, info};
+use tracing::error;
 #[derive(Debug, Serialize, Deserialize)]
 struct ChatRequest {
     pub model: String,

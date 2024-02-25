@@ -1,3 +1,5 @@
+//allow dead code in this file
+#![allow(dead_code)]
 use chrono::Utc;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
