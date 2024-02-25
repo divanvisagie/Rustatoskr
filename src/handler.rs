@@ -1,8 +1,3 @@
-use std::sync::Arc;
-
-use redis::Connection;
-use tokio::sync::Mutex;
-
 use crate::{
     layers::{
         embedding::EmbeddingLayer, memory::MemoryLayer, security::SecurityLayer,

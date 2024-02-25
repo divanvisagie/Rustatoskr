@@ -4,8 +4,9 @@ use serde::{Deserialize, Serialize};
 use serde_json;
 use sha2::{Digest, Sha256};
 use std::error::Error;
+use tracing::{error, info};
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct ChatRequest {
     pub role: String,
     pub content: String,
@@ -33,23 +34,41 @@ pub struct ChatResponse {
 
 #[async_trait]
 pub trait MunninClient: Send + Sync {
-    async fn save(&self, role: String, content: String) -> Result<(), Box<dyn Error>>;
+    async fn save(
+        &self,
+        username: &String,
+        role: String,
+        content: String,
+    ) -> Result<(), Box<dyn Error>>;
     async fn search(&self, query: String) -> Result<Vec<SearchResponse>, ()>;
     async fn get_context(&self, username: String) -> Result<Vec<ChatResponse>, ()>;
 }
 
-pub struct MunninClientImpl {}
+pub struct MunninClientImpl {
+    base_url: String,
+}
 
 impl MunninClientImpl {
     pub fn new() -> Self {
-        MunninClientImpl {}
+        MunninClientImpl {
+            base_url: "http://localhost:8080".to_string(),
+        }
     }
 }
 
 #[async_trait]
 impl MunninClient for MunninClientImpl {
-    async fn save(&self, role: String, content: String) -> Result<(), Box<dyn std::error::Error>> {
-        let url = "http://heimdallr.local:8080/api/v1/chat";
+    async fn save(
+        &self,
+        username: &String,
+        role: String,
+        content: String,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let url = format!(
+            "{}/api/v1/chat/{}",
+            self.base_url.to_string(),
+            username.clone()
+        );
         let client = reqwest::Client::new();
 
         // create a sha256 hash of the message
@@ -87,27 +106,27 @@ impl MunninClient for MunninClientImpl {
         Ok(())
     }
     async fn get_context(&self, username: String) -> Result<Vec<ChatResponse>, ()> {
-        let url = format!(
-            "http://heimdallr.local:8080/api/v1/chat/{}/context",
-            username
-        );
+        let url = format!("{}/api/v1/chat/{}/context", self.base_url, username);
         let client = reqwest::Client::new();
 
         // execute get request
-        let response = client.get(url).send().await;
+        let response = client.get(url.clone()).send().await;
 
-        let response_body = match response {
-            Ok(response) => response.json::<Vec<ChatResponse>>().await,
+        let response = match response {
+            Ok(response) => response,
             Err(e) => {
-                println!("Failed to parse response: {}", e);
+                error!("Failed to parse response to {}: {}", url.clone(), e);
                 return Err(());
             }
         };
 
+        info!("Response: {:?}", response);
+
+        let response_body = response.json::<Vec<ChatResponse>>().await;
         let response_body = match response_body {
             Ok(body) => body,
             Err(e) => {
-                println!("Failed to parse response: {}", e);
+                error!("Failed to parse response: {}", e);
                 return Err(());
             }
         };
@@ -116,7 +135,7 @@ impl MunninClient for MunninClientImpl {
     }
 
     async fn search(&self, query: String) -> Result<Vec<SearchResponse>, ()> {
-        let url = "http://heimdallr.local:8080/api/v1/chat";
+        let url = format!("{}/api/v1/chat", self.base_url);
         let client = reqwest::Client::new();
 
         let request_body = serde_json::to_string(&SearchRequest { content: query });

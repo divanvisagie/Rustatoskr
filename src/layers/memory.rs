@@ -1,7 +1,7 @@
-extern crate redis;
-use redis::{Commands, Connection};
+use std::borrow::Borrow;
 
 use serde::{Deserialize, Serialize};
+use tracing::{error, info};
 
 use async_trait::async_trait;
 
@@ -32,10 +32,17 @@ impl Layer for MemoryLayer {
     async fn execute(&mut self, message: &mut RequestMessage) -> ResponseMessage {
         let munnin_client = MunninClientImpl::new();
 
-        let context = munnin_client
-            .get_context(message.username.clone())
-            .await
-            .unwrap();
+        let context = match munnin_client.get_context(message.username.clone()).await {
+            Ok(context) => context,
+            Err(err) => {
+                error!("Failed to get context: {:?}", err);
+                return ResponseMessage {
+                    bytes: None,
+                    options: None,
+                    text: "Failed to get context".to_string(),
+                };
+            }
+        };
 
         //convert context to stored messages
         let mut stored_context: Vec<StoredMessage> = Vec::new();
@@ -43,19 +50,32 @@ impl Layer for MemoryLayer {
             stored_context.push(StoredMessage {
                 username: message.username.clone(),
                 text: chat_response.content,
-                role: Role::Assistant,
+                role: match chat_response.role.as_str() {
+                    "user" => Role::User,
+                    "assistant" => Role::Assistant,
+                    _ => Role::System,
+                },
             });
         }
 
+        message.context = stored_context;
         let res = self.next.execute(message).await;
 
         munnin_client
-            .save("user".to_string(), message.text.clone())
+            .save(
+                message.username.to_string().borrow(),
+                "user".to_string(),
+                message.text.clone(),
+            )
             .await
             .unwrap();
 
         munnin_client
-            .save("assistant".to_string(), res.text.clone())
+            .save(
+                message.username.to_string().borrow(),
+                "assistant".to_string(),
+                res.text.clone(),
+            )
             .await
             .unwrap();
 

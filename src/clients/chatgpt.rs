@@ -3,7 +3,7 @@ use std::{env, fmt};
 use reqwest::header;
 use serde::{Deserialize, Serialize};
 use serde_json::Result;
-
+use tracing::{error, info};
 #[derive(Debug, Serialize, Deserialize)]
 struct ChatRequest {
     pub model: String,
@@ -75,7 +75,7 @@ impl fmt::Display for Role {
 impl GptClient {
     pub fn new() -> Self {
         GptClient {
-            messages: Vec::new()
+            messages: Vec::new(),
         }
     }
 
@@ -123,7 +123,7 @@ impl GptClient {
         let response = match response {
             Ok(response) => response.text().await,
             Err(e) => {
-                log::error!("Error: {}", e);
+                error!("Error: {}", e);
                 return "Error".to_string();
             }
         };

@@ -1,10 +1,10 @@
 #![allow(deprecated)]
 use message_types::RequestMessage;
-use redis::Client;
 use std::sync::mpsc;
 use std::sync::mpsc::{Receiver, Sender};
 use std::thread;
 use std::time::Duration;
+use tracing::{error, info};
 
 use teloxide::prelude::*;
 use tokio::sync::Mutex;
@@ -47,11 +47,8 @@ impl TelegramConverter {
 pub async fn start_bot(sender: Sender<String>) {
     let bot = Bot::from_env();
 
-    let sdr = Arc::new(Mutex::new(sender));
-
     teloxide::repl(bot, move |bot: Bot, msg: Message| {
-        let sdr = Arc::clone(&sdr);
-        log::info!(
+        info!(
             "{} sent the message: {}",
             msg.chat.username().unwrap_or_default(),
             msg.text().unwrap_or_default()
@@ -59,16 +56,14 @@ pub async fn start_bot(sender: Sender<String>) {
 
         async move {
             let bc = TelegramConverter::new();
-            let hdlr = handler::Handler::new();
+            let handler = handler::Handler::new();
 
             bot.send_chat_action(msg.chat.id, ChatAction::Typing)
                 .await?;
 
-            let mut req = bc.bot_type_to_request_message(&msg);
+            let mut request_message: RequestMessage = bc.bot_type_to_request_message(&msg);
 
-            sdr.lock().await.send(req.text.clone()).unwrap();
-
-            let res = hdlr.handle_message(&mut req).await;
+            let res = handler.handle_message(&mut request_message).await;
 
             if let Some(bytes) = res.bytes {
                 bot.send_document(msg.chat.id, InputFile::memory(bytes).file_name(res.text))
@@ -103,7 +98,7 @@ pub async fn start_bot(sender: Sender<String>) {
                 Ok(_) => (),
                 Err(e) => {
                     bot.send_message(msg.chat.id, res.text.clone()).await?;
-                    log::error!("Failed to send message: {}", e)
+                    error!("Failed to send message: {}", e)
                 }
             };
 
@@ -116,7 +111,7 @@ pub async fn start_bot(sender: Sender<String>) {
 pub async fn start_server() {
     let port = match env::var("PORT") {
         Ok(val) => val,
-        Err(_) => "8080".to_string(),
+        Err(_) => "8001".to_string(),
     };
     let port = port.parse::<u16>().expect("PORT must be a number");
 
@@ -139,13 +134,13 @@ pub async fn start_receiver(receiver: Receiver<String>) {
     loop {
         match receiver.try_recv() {
             Ok(message) => {
-                log::info!("Received message from channel: {}", message);
+                info!("Received message from channel: {}", message);
             }
             Err(mpsc::TryRecvError::Empty) => {
                 thread::sleep(Duration::from_secs(1));
             }
             Err(mpsc::TryRecvError::Disconnected) => {
-                log::info!("Sender has been disconnected.");
+                info!("Sender has been disconnected.");
                 break;
             }
         }
@@ -159,8 +154,8 @@ async fn hello() -> impl Responder {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    pretty_env_logger::init();
-    log::info!("Starting bot...");
+    tracing_subscriber::fmt::init();
+    info!("Starting bot...");
 
     let (sender, receiver): (Sender<String>, Receiver<String>) = mpsc::channel();
 

@@ -6,6 +6,7 @@ use crate::capabilities::summarize::SummaryCapability;
 use crate::message_types::ResponseMessage;
 use crate::{capabilities::Capability, RequestMessage};
 use async_trait::async_trait;
+use tracing::info;
 pub struct SelectorLayer {
     capabilities: Vec<Box<dyn Capability>>,
 }
@@ -18,7 +19,7 @@ impl Layer for SelectorLayer {
 
         for capability in &mut self.capabilities {
             let score = capability.check(message).await;
-            log::info!("{} similarity: {}", capability.get_name(), score);
+            info!("{} similarity: {}", capability.get_name(), score);
             if score > best_score {
                 best_score = score;
                 best = Some(capability);
@@ -26,7 +27,7 @@ impl Layer for SelectorLayer {
         }
         match best {
             Some(capability) => {
-                log::info!("Selected capability: {}", capability.get_name());
+                info!("Selected capability: {}", capability.get_name());
                 capability.execute(message).await
             }
             None => ResponseMessage::new("No capability found".to_string()),

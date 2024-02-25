@@ -2,6 +2,7 @@ use std::env;
 
 use reqwest::header;
 use serde::{Deserialize, Serialize};
+use tracing::error;
 
 pub struct EmbeddingsClient {}
 
@@ -65,7 +66,7 @@ impl EmbeddingsClient {
         let response = match response {
             Ok(response) => response.text().await.unwrap(),
             Err(e) => {
-                log::error!("Error: {}", e);
+                error!("Error: {}", e);
                 "Error".to_string()
             }
         };
