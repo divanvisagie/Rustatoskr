@@ -44,23 +44,12 @@ impl TelegramConverter {
     }
 }
 
-fn get_redis_connection() -> redis::Connection {
-    let url = env::var("REDIS_URL").expect("Missing REDIS_URL environment variable");
-    let client = Client::open(url).expect("Failed to connect to Redis");
-
-    client
-        .get_connection()
-        .expect("Failed to get Redis connection")
-}
-
 pub async fn start_bot(sender: Sender<String>) {
     let bot = Bot::from_env();
 
-    let wc = Arc::new(Mutex::new(get_redis_connection()));
     let sdr = Arc::new(Mutex::new(sender));
 
     teloxide::repl(bot, move |bot: Bot, msg: Message| {
-        let conn = Arc::clone(&wc);
         let sdr = Arc::clone(&sdr);
         log::info!(
             "{} sent the message: {}",
@@ -70,7 +59,7 @@ pub async fn start_bot(sender: Sender<String>) {
 
         async move {
             let bc = TelegramConverter::new();
-            let hdlr = handler::Handler::new(conn);
+            let hdlr = handler::Handler::new();
 
             bot.send_chat_action(msg.chat.id, ChatAction::Typing)
                 .await?;

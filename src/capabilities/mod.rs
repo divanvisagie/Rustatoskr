@@ -3,7 +3,6 @@ use async_trait::async_trait;
 
 pub mod chat;
 pub mod debug;
-pub mod dump;
 pub mod privacy;
 pub mod summarize;
 

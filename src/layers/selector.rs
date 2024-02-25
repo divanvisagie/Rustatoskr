@@ -1,7 +1,6 @@
 use super::Layer;
 use crate::capabilities::chat::ChatCapability;
 use crate::capabilities::debug::DebugCapability;
-use crate::capabilities::dump::MemoryDumpCapability;
 use crate::capabilities::privacy::PrivacyCapability;
 use crate::capabilities::summarize::SummaryCapability;
 use crate::message_types::ResponseMessage;
@@ -41,7 +40,6 @@ impl SelectorLayer {
             capabilities: vec![
                 Box::new(DebugCapability::new()),
                 Box::new(PrivacyCapability::new()),
-                Box::new(MemoryDumpCapability::new()),
                 Box::new(ChatCapability::new()),
                 Box::new(SummaryCapability::new()),
             ],

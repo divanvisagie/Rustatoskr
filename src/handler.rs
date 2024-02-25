@@ -9,7 +9,7 @@ use crate::{
         selector::SelectorLayer, Layer,
     },
     message_types::ResponseMessage,
-    repositories::users::RedisUserRepository,
+    repositories::users::FsUserRepository,
     RequestMessage,
 };
 
@@ -18,12 +18,12 @@ pub struct Handler {
 }
 
 impl Handler {
-    pub fn new(conn: Arc<Mutex<Connection>>) -> Self {
+    pub fn new() -> Self {
         let selector_layer = SelectorLayer::new();
         let embedding_layer = EmbeddingLayer::new(Box::new(selector_layer));
         let memory_layer = MemoryLayer::new(Box::new(embedding_layer));
 
-        let user_repository = RedisUserRepository::new(Arc::clone(&conn));
+        let user_repository = FsUserRepository::new();
         let security_layer = SecurityLayer::new(Box::new(memory_layer), Box::new(user_repository));
         Self {
             gateway_layer: Box::new(security_layer),

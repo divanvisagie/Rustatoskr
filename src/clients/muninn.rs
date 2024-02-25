@@ -24,11 +24,18 @@ pub struct SearchResponse {
     pub hash: String,
     pub ranking: f32,
 }
+#[derive(Deserialize, Clone)]
+pub struct ChatResponse {
+    pub role: String,
+    pub content: String,
+    pub hash: String,
+}
 
 #[async_trait]
 pub trait MunninClient: Send + Sync {
     async fn save(&self, role: String, content: String) -> Result<(), Box<dyn Error>>;
     async fn search(&self, query: String) -> Result<Vec<SearchResponse>, ()>;
+    async fn get_context(&self, username: String) -> Result<Vec<ChatResponse>, ()>;
 }
 
 pub struct MunninClientImpl {}
@@ -78,6 +85,34 @@ impl MunninClient for MunninClientImpl {
         }
 
         Ok(())
+    }
+    async fn get_context(&self, username: String) -> Result<Vec<ChatResponse>, ()> {
+        let url = format!(
+            "http://heimdallr.local:8080/api/v1/chat/{}/context",
+            username
+        );
+        let client = reqwest::Client::new();
+
+        // execute get request
+        let response = client.get(url).send().await;
+
+        let response_body = match response {
+            Ok(response) => response.json::<Vec<ChatResponse>>().await,
+            Err(e) => {
+                println!("Failed to parse response: {}", e);
+                return Err(());
+            }
+        };
+
+        let response_body = match response_body {
+            Ok(body) => body,
+            Err(e) => {
+                println!("Failed to parse response: {}", e);
+                return Err(());
+            }
+        };
+
+        Ok(response_body)
     }
 
     async fn search(&self, query: String) -> Result<Vec<SearchResponse>, ()> {

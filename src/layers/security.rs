@@ -66,8 +66,6 @@ mod tests {
         async fn get_usernames(&mut self) -> Vec<String> {
             vec!["valid_user".to_string()]
         }
-
-        async fn save_user_to_list(&mut self, _username: String) {}
     }
 
     struct MockLayer {}

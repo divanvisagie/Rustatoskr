@@ -27,24 +27,26 @@ pub struct MemoryLayer {
     next: Box<dyn Layer>,
 }
 
-pub fn get_from_redis(connection: &mut Connection, username: String) -> Vec<StoredMessage> {
-    // create a reference key
-    let key = format!("messages:{}", username);
-
-    let value_for_key: String = connection.get(&key).unwrap_or("[]".to_string());
-
-    let current_messages: Vec<StoredMessage> =
-        serde_json::from_str(&value_for_key).expect("Failed to deserialize messages from JSON");
-
-    current_messages
-}
-
 #[async_trait]
 impl Layer for MemoryLayer {
     async fn execute(&mut self, message: &mut RequestMessage) -> ResponseMessage {
         let munnin_client = MunninClientImpl::new();
 
-        message.context = vec![];
+        let context = munnin_client
+            .get_context(message.username.clone())
+            .await
+            .unwrap();
+
+        //convert context to stored messages
+        let mut stored_context: Vec<StoredMessage> = Vec::new();
+        for chat_response in context {
+            stored_context.push(StoredMessage {
+                username: message.username.clone(),
+                text: chat_response.content,
+                role: Role::Assistant,
+            });
+        }
+
         let res = self.next.execute(message).await;
 
         munnin_client
