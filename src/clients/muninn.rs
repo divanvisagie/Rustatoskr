@@ -51,7 +51,7 @@ pub struct MunninClientImpl {
 impl MunninClientImpl {
     pub fn new() -> Self {
         MunninClientImpl {
-            base_url: "http://localhost:8080".to_string(),
+            base_url: "http://0.0.0.0:8080".to_string(),
         }
     }
 }
