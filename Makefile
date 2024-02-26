@@ -1,4 +1,8 @@
 APP_NAME=rustatoskr
+
+main:
+	cargo build --release
+
 # run docker compose on docker-compose.test.yml
 test:
 	docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit
