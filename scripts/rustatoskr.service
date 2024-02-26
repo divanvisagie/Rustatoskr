@@ -3,6 +3,7 @@ Description=Rustatoskr Service
 After=network.target
 
 [Service]
+EnvironmentFile=/home/divanvisagie/src/rustatoskr/.env
 ExecStart=/home/divanvisagie/src/rustatoskr/target/release/rustatoskr
 WorkingDirectory=/home/divanvisagie/src/rustatoskr/target/release/
 Restart=always

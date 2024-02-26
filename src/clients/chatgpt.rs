@@ -107,7 +107,7 @@ impl GptClient {
         );
 
         let chat_request = ChatRequest {
-            model: "gpt-3.5-turbo".to_string(),
+            model: "gpt-4-turbo-preview".to_string(),
             messages: self.messages.clone(),
         };
 
