@@ -1,0 +1,13 @@
+[Unit]
+Description=Rustatoskr Service
+After=network.target
+
+[Service]
+ExecStart=/home/divanvisagie/src/rustatoskr/target/release/rustatoskr
+WorkingDirectory=/home/divanvisagie/src/rustatoskr/target/release/
+Restart=always
+User=divanvisagie
+Group=divanvisagie
+
+[Install]
+WantedBy=multi-user.target
