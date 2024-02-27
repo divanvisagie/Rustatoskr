@@ -33,7 +33,7 @@ pub struct ChatResponse {
 }
 
 #[async_trait]
-pub trait MunninClient: Send + Sync {
+pub trait MunninClient {
     async fn save(
         &self,
         username: &String,
@@ -51,7 +51,7 @@ pub struct MunninClientImpl {
 impl MunninClientImpl {
     pub fn new() -> Self {
         MunninClientImpl {
-            base_url: "http://0.0.0.0:8080".to_string(),
+            base_url: "http://127.0.0.1:8080".to_string(),
         }
     }
 }

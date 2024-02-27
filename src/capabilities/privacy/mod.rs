@@ -19,8 +19,7 @@ pub struct PrivacyCapability {
 
 impl PrivacyCapability {
     pub fn new() -> Self {
-        let description =
-            "How do you handle my personal data".to_string();
+        let description = "What is the privacy policy of this service?".to_string();
         PrivacyCapability { description }
     }
 }
@@ -39,7 +38,7 @@ impl Capability for PrivacyCapability {
     }
 
     async fn execute(&mut self, _message: &RequestMessage) -> ResponseMessage {
-        let res = include_str!("canned_response.txt");
+        let res = include_str!("canned_response.md");
         ResponseMessage::new(res.to_string())
     }
 }

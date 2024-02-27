@@ -40,7 +40,7 @@ impl SelectorLayer {
         SelectorLayer {
             capabilities: vec![
                 Box::new(DebugCapability::new()),
-                // Box::new(PrivacyCapability::new()),
+                Box::new(PrivacyCapability::new()),
                 Box::new(ChatCapability::new()),
                 Box::new(SummaryCapability::new()),
             ],
