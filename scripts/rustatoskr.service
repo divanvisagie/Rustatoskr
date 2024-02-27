@@ -1,11 +1,11 @@
 [Unit]
-Description=Rustatoskr Service
+Description=Ratatoskr Service
 After=network.target
 
 [Service]
-EnvironmentFile=/home/divanvisagie/src/rustatoskr/.env
-ExecStart=/home/divanvisagie/src/rustatoskr/target/release/rustatoskr
-WorkingDirectory=/home/divanvisagie/src/rustatoskr/target/release/
+EnvironmentFile=/home/divanvisagie/src/ratatoskr/.env
+ExecStart=/home/divanvisagie/src/ratatoskr/target/release/ratatoskr
+WorkingDirectory=/home/divanvisagie/src/ratatoskr/target/release/
 Restart=always
 User=divanvisagie
 Group=divanvisagie

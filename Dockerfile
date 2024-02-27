@@ -20,7 +20,7 @@ ENV REDIS_URL ""
 ENV OPENAI_API_KEY ""
 
 COPY --from=build /app/target/release/ .
-RUN chmod +x ./rustatoskr
+RUN chmod +x ./ratatoskr
 # Set the entrypoint command for the container
 RUN ls
-CMD ["./rustatoskr"]
+CMD ["./ratatoskr"]

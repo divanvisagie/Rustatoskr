@@ -1,4 +1,4 @@
-APP_NAME=rustatoskr
+APP_NAME=ratatoskr
 
 main:
 	cargo build --release
@@ -12,8 +12,8 @@ pushpi:
 
 install:
 	# stop the service if it already exists
-	systemctl stop rustatoskr || true
-	systemctl disable rustatoskr || true
+	systemctl stop ratatoskr || true
+	systemctl disable ratatoskr || true
 	# delete the old service file if it exists
-	rm /etc/systemd/system/rustatoskr.service || true
-	cp scripts/rustatoskr.service /etc/systemd/system/
+	rm /etc/systemd/system/ratatoskr.service || true
+	cp scripts/ratatoskr.service /etc/systemd/system/
