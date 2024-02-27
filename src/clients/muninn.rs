@@ -95,12 +95,12 @@ impl MunninClient for MunninClientImpl {
         match response {
             Ok(response) => {
                 if response.status().is_success() {
-                    println!("Message sent successfully");
+                    info!("Message sent successfully")
                 } else {
-                    println!("Failed to send message: {:?}", response);
+                    error!("Failed to send message: {:?}", response);
                 }
             }
-            Err(e) => println!("Failed to send message: {}", e),
+            Err(e) => error!("Failed to send message: {}", e),
         }
 
         Ok(())
@@ -155,7 +155,7 @@ impl MunninClient for MunninClientImpl {
         let response = match response {
             Ok(response) => response,
             Err(e) => {
-                println!("Failed to send message: {}", e);
+                error!("Failed to send message: {}", e);
                 return Err(());
             }
         };
@@ -164,7 +164,7 @@ impl MunninClient for MunninClientImpl {
         let response_body = match response_body {
             Ok(body) => body,
             Err(e) => {
-                println!("Failed to parse response: {}", e);
+                error!("Failed to parse response: {}", e);
                 return Err(());
             }
         };
